@@ -1,0 +1,33 @@
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Pagination" class="mt-3">
+  <ul class="pagination pagination-sm mb-0">
+
+    <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+      <a class="page-link"
+         href="#"
+         hx-get="{{ table_url }}?q={{ q|urlencode }}&page_size={{ page_size }}&page={{ page_obj.previous_page_number }}"
+         hx-target="#customersTable"
+         {% if not page_obj.has_previous %}tabindex="-1" aria-disabled="true"{% endif %}>
+        Prev
+      </a>
+    </li>
+
+    <li class="page-item disabled">
+      <span class="page-link">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </span>
+    </li>
+
+    <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+      <a class="page-link"
+         href="#"
+         hx-get="{{ table_url }}?q={{ q|urlencode }}&page_size={{ page_size }}&page={{ page_obj.next_page_number }}"
+         hx-target="#customersTable"
+         {% if not page_obj.has_next %}tabindex="-1" aria-disabled="true"{% endif %}>
+        Next
+      </a>
+    </li>
+
+  </ul>
+</nav>
+{% endif %}

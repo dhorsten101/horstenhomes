@@ -1,0 +1,41 @@
+<div class="card">
+  <div class="card-body">
+
+    {% if customers %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle">
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th class="text-end">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for c in customers %}
+        <tr>
+          <td class="fw-semibold">{{ c.name }}</td>
+          <td class="text-muted">{{ c.email|default:"—" }}</td>
+          <td class="text-end">
+            <button
+                    class="btn btn-outline-secondary btn-sm"
+                    hx-get="{% url 'customers:edit' c.id %}"
+                    hx-target="#modalBody"
+                    data-bs-toggle="modal"
+                    data-bs-target="#mainModal">
+              Edit
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% include "partials/pagination.html" with page_obj=page_obj q=q page_size=page_size table_url=table_url %}
+    {% else %}
+    <div class="text-muted">No customers found.</div>
+    {% endif %}
+
+  </div>
+</div>

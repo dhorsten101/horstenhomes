@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WEB_NAME="${WEB_NAME:-hh-web}"
+
+if ! docker ps --format '{{.Names}}' | grep -q "^${WEB_NAME}$"; then
+  echo "❌ ${WEB_NAME} is not running. Start it first:"
+  echo "   ./bin/dev up"
+  exit 1
+fi
+
+docker exec -it "${WEB_NAME}" python manage.py shell -c "
+from apps.tenancy.models import Tenant, Domain
+
+tenants = list(Tenant.objects.all().order_by('schema_name').values('schema_name','name','slug'))
+domains = {}
+for d in Domain.objects.select_related('tenant').all():
+    domains.setdefault(d.tenant.schema_name, []).append(d.domain)
+
+print('Tenants:')
+for t in tenants:
+    schema = t['schema_name']
+    print(f\"- {schema} | name={t['name']} | slug={t['slug']}\")
+    for dom in sorted(domains.get(schema, [])):
+        print(f\"    - {dom}\")
+"

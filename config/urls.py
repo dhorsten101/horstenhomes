@@ -17,12 +17,13 @@ Including another URLconf
 
 from django.contrib import admin
 from django.http import HttpResponse
+from django.shortcuts import render
 from django.urls import path
 
 def home(request):
-    return HttpResponse("HorstenHomes is running ✅")
+    return render(request, "pages/home.html")
 
 urlpatterns = [
-    path("", home),
+    path("", home, name="home"),
     path("admin/", admin.site.urls),
 ]

@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+NETWORK="${NETWORK:-horstenhomes-net}"
+WEB_NAME="${WEB_NAME:-hh-web}"
+PG_NAME="${PG_NAME:-hh-postgres}"
+REDIS_NAME="${REDIS_NAME:-hh-redis}"
+
+echo "==============================="
+echo " HorstenHomes Dev Status"
+echo "==============================="
+echo ""
+
+if ! docker info >/dev/null 2>&1; then
+  echo "❌ Docker daemon: NOT RUNNING"
+  echo "   Start Docker Desktop."
+  exit 1
+fi
+
+echo "✅ Docker daemon: running"
+echo ""
+
+echo "▶ Containers (expected: ${WEB_NAME}, ${PG_NAME}, ${REDIS_NAME})"
+docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}' | sed 's/\t/ | /g'
+echo ""
+
+echo "▶ Containers (stopped but present)"
+docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}' | sed 's/\t/ | /g'
+echo ""
+
+echo "▶ Network: ${NETWORK}"
+if docker network inspect "${NETWORK}" >/dev/null 2>&1; then
+  echo "✅ Network exists"
+  echo "   Attached containers:"
+  docker network inspect "${NETWORK}" --format '{{range $k,$v := .Containers}}{{println $v.Name}}{{end}}' | sed '/^$/d' || true
+else
+  echo "❌ Network does not exist"
+fi
+echo ""
+
+echo "▶ Quick port checks"
+echo "   Web   : http://127.0.0.1:8000  (if ${WEB_NAME} running)"
+echo "   Postgres: 127.0.0.1:5432       (if ${PG_NAME} published)"
+echo "   Redis : 127.0.0.1:6379         (if ${REDIS_NAME} published)"
+echo ""
+
+echo "▶ django-tenants (tenants/domains)"
+if docker ps --format '{{.Names}}' | grep -q "^${WEB_NAME}$"; then
+  docker exec -it "${WEB_NAME}" python manage.py shell -c "
+from apps.tenancy.models import Tenant, Domain
+print('tenants :', list(Tenant.objects.values_list('schema_name', flat=True)))
+print('domains :', list(Domain.objects.values_list('domain', flat=True)))
+" || true
+else
+  echo "• ${WEB_NAME} not running, cannot query tenants/domains."
+  echo "  Start with: ./bin/dev-up"
+fi
+
+echo ""
+echo "✅ Status complete."

@@ -1,0 +1,189 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+NETWORK="${NETWORK:-horstenhomes-net}"
+
+WEB_NAME="${WEB_NAME:-hh-web}"
+WEB_IMAGE="${WEB_IMAGE:-horstenhomes-dev:latest}"
+WEB_PORT="${WEB_PORT:-8000}"
+
+PG_NAME="${PG_NAME:-hh-postgres}"
+PG_IMAGE="${PG_IMAGE:-postgres:16}"
+PG_PORT="${PG_PORT:-5432}"
+
+REDIS_NAME="${REDIS_NAME:-hh-redis}"
+REDIS_IMAGE="${REDIS_IMAGE:-redis:7}"
+REDIS_PORT="${REDIS_PORT:-6379}"
+
+ENV_FILE="${ENV_FILE:-.env.dev}"
+
+# Default tenant bootstrap (override via env if needed)
+TENANT_SCHEMA="${TENANT_SCHEMA:-acme}"
+TENANT_NAME="${TENANT_NAME:-Acme Ltd}"
+TENANT_SLUG="${TENANT_SLUG:-acme}"
+TENANT_DOMAIN="${TENANT_DOMAIN:-acme.horstenhomes.local}"
+
+ADMIN_EMAIL="${ADMIN_EMAIL:-admin@acme.com}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-Rolo123!}"
+
+confirm() {
+  echo "⚠️  This will DELETE your Postgres container (${PG_NAME}) and all data."
+  read -r -p "Type RESET to continue: " answer
+  if [[ "${answer}" != "RESET" ]]; then
+    echo "Aborted."
+    exit 1
+  fi
+}
+
+require_docker() {
+  if ! docker info >/dev/null 2>&1; then
+    echo "❌ Docker daemon not running. Start Docker Desktop."
+    exit 1
+  fi
+}
+
+ensure_network() {
+  docker network inspect "${NETWORK}" >/dev/null 2>&1 || docker network create "${NETWORK}" >/dev/null
+}
+
+ensure_redis() {
+  if docker ps --format '{{.Names}}' | grep -q "^${REDIS_NAME}$"; then
+    return 0
+  fi
+  docker rm -f "${REDIS_NAME}" >/dev/null 2>&1 || true
+  docker run -d --name "${REDIS_NAME}" --network "${NETWORK}" \
+    -p "${REDIS_PORT}:6379" \
+    "${REDIS_IMAGE}" >/dev/null
+}
+
+recreate_postgres() {
+  docker rm -f "${PG_NAME}" >/dev/null 2>&1 || true
+
+  # Load env for DB creds if present
+  if [[ -f "${ENV_FILE}" ]]; then
+    set -a
+    # shellcheck disable=SC1090
+    source "${ENV_FILE}"
+    set +a
+  fi
+
+  docker run -d --name "${PG_NAME}" --network "${NETWORK}" \
+    -e POSTGRES_DB="${DB_NAME:-horstenhomes}" \
+    -e POSTGRES_USER="${DB_USER:-horstenhomes}" \
+    -e POSTGRES_PASSWORD="${DB_PASSWORD:-horstenhomes}" \
+    -p "${PG_PORT}:5432" \
+    "${PG_IMAGE}" >/dev/null
+}
+
+wait_for_postgres() {
+  echo "▶ Waiting for Postgres to accept connections..."
+  for i in {1..40}; do
+    if docker exec "${PG_NAME}" pg_isready -U "${DB_USER:-horstenhomes}" -d "${DB_NAME:-horstenhomes}" >/dev/null 2>&1; then
+      echo "✅ Postgres is ready."
+      return 0
+    fi
+    sleep 0.5
+  done
+  echo "❌ Postgres did not become ready in time."
+  exit 1
+}
+
+ensure_web_running() {
+  if docker ps --format '{{.Names}}' | grep -q "^${WEB_NAME}$"; then
+    return 0
+  fi
+
+  if [[ ! -f "${ENV_FILE}" ]]; then
+    echo "❌ Missing env file: ${ENV_FILE}"
+    exit 1
+  fi
+
+  docker rm -f "${WEB_NAME}" >/dev/null 2>&1 || true
+
+  docker run -d --name "${WEB_NAME}" --network "${NETWORK}" \
+    --env-file "${ENV_FILE}" \
+    -e PYTHONPATH=/app \
+    -p "${WEB_PORT}:8000" \
+    -v "$(pwd)":/app \
+    "${WEB_IMAGE}" \
+    python manage.py runserver 0.0.0.0:8000 >/dev/null
+}
+
+run_in_web() {
+  # run command inside web container
+  docker exec -it "${WEB_NAME}" "$@"
+}
+
+bootstrap_shared() {
+  echo "▶ Running shared migrations..."
+  run_in_web python manage.py migrate_schemas --shared
+}
+
+bootstrap_tenant() {
+  echo "▶ Creating tenant + domain + migrations + superuser..."
+
+  # Create tenant schema and domains
+  run_in_web python manage.py shell -c "
+from apps.tenancy.models import Tenant, Domain
+schema='${TENANT_SCHEMA}'
+slug='${TENANT_SLUG}'
+name='${TENANT_NAME}'
+domain='${TENANT_DOMAIN}'
+
+Tenant.objects.filter(schema_name=schema).delete()
+t = Tenant(schema_name=schema, name=name, slug=slug)
+t.save()  # auto_create_schema=True creates schema in Postgres
+
+# Domains to make dev painless (host + host:port)
+domains = set([
+  domain,
+  f'{domain}:${WEB_PORT}',
+  'localhost',
+  f'localhost:${WEB_PORT}',
+  '127.0.0.1',
+  f'127.0.0.1:${WEB_PORT}',
+])
+
+for d in domains:
+    Domain.objects.get_or_create(domain=d, tenant=t, defaults={'is_primary': (d==domain)})
+print('tenant=', t.schema_name, 'domains=', sorted(domains))
+"
+
+  # Migrate tenant schema
+  run_in_web python manage.py migrate_schemas --schema="${TENANT_SCHEMA}"
+
+  # Create tenant admin user
+  run_in_web python manage.py shell -c "
+from django_tenants.utils import schema_context
+from django.contrib.auth import get_user_model
+
+with schema_context('${TENANT_SCHEMA}'):
+    User = get_user_model()
+    u, created = User.objects.get_or_create(email='${ADMIN_EMAIL}', defaults={'is_staff': True, 'is_superuser': True})
+    u.is_staff = True
+    u.is_superuser = True
+    u.set_password('${ADMIN_PASSWORD}')
+    u.save()
+print('tenant superuser ready:', '${ADMIN_EMAIL}')
+"
+}
+
+main() {
+  require_docker
+  confirm
+  ensure_network
+  ensure_redis
+  recreate_postgres
+  wait_for_postgres
+  ensure_web_running
+
+  bootstrap_shared
+  bootstrap_tenant
+
+  echo "✅ Reset complete."
+  echo "   Tenant admin: http://${TENANT_DOMAIN}:${WEB_PORT}/admin/"
+  echo "   Login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}"
+  echo "   Logs:  docker logs -f ${WEB_NAME}"
+}
+
+main "$@"

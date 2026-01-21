@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+NETWORK="${NETWORK:-horstenhomes-net}"
+
+WEB_NAME="${WEB_NAME:-hh-web}"
+WEB_IMAGE="${WEB_IMAGE:-horstenhomes-dev:latest}"
+WEB_PORT="${WEB_PORT:-8000}"
+
+PG_NAME="${PG_NAME:-hh-postgres}"
+PG_IMAGE="${PG_IMAGE:-postgres:16}"
+PG_PORT="${PG_PORT:-5432}"
+
+REDIS_NAME="${REDIS_NAME:-hh-redis}"
+REDIS_IMAGE="${REDIS_IMAGE:-redis:7}"
+REDIS_PORT="${REDIS_PORT:-6379}"
+
+ENV_FILE="${ENV_FILE:-.env.dev}"
+
+if ! docker info >/dev/null 2>&1; then
+  echo "❌ Docker daemon is not running. Start Docker Desktop and retry."
+  exit 1
+fi
+
+if [[ ! -f "${ENV_FILE}" ]]; then
+  echo "❌ Missing env file: ${ENV_FILE}"
+  exit 1
+fi
+
+# Load .env.dev into shell (for DB defaults)
+set -a
+# shellcheck disable=SC1090
+source "${ENV_FILE}"
+set +a
+
+echo "▶ Ensuring network exists: ${NETWORK}"
+docker network inspect "${NETWORK}" >/dev/null 2>&1 || docker network create "${NETWORK}" >/dev/null
+
+echo "▶ Ensuring Postgres is running: ${PG_NAME}"
+if docker ps --format '{{.Names}}' | grep -q "^${PG_NAME}$"; then
+  : # already running
+elif docker ps -a --format '{{.Names}}' | grep -q "^${PG_NAME}$"; then
+  # Try to start; if it fails due to missing network, recreate container
+  if ! docker start "${PG_NAME}" >/dev/null 2>&1; then
+    echo "⚠️  Postgres container '${PG_NAME}' failed to start (likely stale network). Recreating..."
+    docker rm -f "${PG_NAME}" >/dev/null 2>&1 || true
+    docker run -d --name "${PG_NAME}" --network "${NETWORK}" \
+      -e POSTGRES_DB="${DB_NAME:-horstenhomes}" \
+      -e POSTGRES_USER="${DB_USER:-horstenhomes}" \
+      -e POSTGRES_PASSWORD="${DB_PASSWORD:-horstenhomes}" \
+      -p "${PG_PORT}:5432" \
+      "${PG_IMAGE}" >/dev/null
+  fi
+else
+  docker run -d --name "${PG_NAME}" --network "${NETWORK}" \
+    -e POSTGRES_DB="${DB_NAME:-horstenhomes}" \
+    -e POSTGRES_USER="${DB_USER:-horstenhomes}" \
+    -e POSTGRES_PASSWORD="${DB_PASSWORD:-horstenhomes}" \
+    -p "${PG_PORT}:5432" \
+    "${PG_IMAGE}" >/dev/null
+fi
+
+echo "▶ Ensuring Redis is running: ${REDIS_NAME}"
+if docker ps --format '{{.Names}}' | grep -q "^${REDIS_NAME}$"; then
+  : # already running
+elif docker ps -a --format '{{.Names}}' | grep -q "^${REDIS_NAME}$"; then
+  # Try to start; if it fails due to missing network, recreate container
+  if ! docker start "${REDIS_NAME}" >/dev/null 2>&1; then
+    echo "⚠️  Redis container '${REDIS_NAME}' failed to start (likely stale network). Recreating..."
+    docker rm -f "${REDIS_NAME}" >/dev/null 2>&1 || true
+    docker run -d --name "${REDIS_NAME}" --network "${NETWORK}" \
+      -p "${REDIS_PORT}:6379" \
+      "${REDIS_IMAGE}" >/dev/null
+  fi
+else
+  docker run -d --name "${REDIS_NAME}" --network "${NETWORK}" \
+    -p "${REDIS_PORT}:6379" \
+    "${REDIS_IMAGE}" >/dev/null
+fi
+
+echo "▶ Starting Django container: ${WEB_NAME}"
+# remove old web if exists (so name is stable)
+docker rm -f "${WEB_NAME}" >/dev/null 2>&1 || true
+
+# Start detached so PyCharm can stop it via a separate command, and you can tail logs.
+docker run -d --name "${WEB_NAME}" --network "${NETWORK}" \
+  --env-file "${ENV_FILE}" \
+  -e PYTHONPATH=/app \
+  -p "${WEB_PORT}:8000" \
+  -v "$(pwd)":/app \
+  "${WEB_IMAGE}" \
+  python manage.py runserver 0.0.0.0:8000 >/dev/null
+
+echo "✅ Up."
+echo "   Web:   http://127.0.0.1:${WEB_PORT}/"
+echo "   Logs:  docker logs -f ${WEB_NAME}"
+echo "   Stop:  docker rm -f ${WEB_NAME}"

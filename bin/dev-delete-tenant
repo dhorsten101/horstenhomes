@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WEB_NAME="${WEB_NAME:-hh-web}"
+PG_NAME="${PG_NAME:-hh-postgres}"
+DB_USER="${DB_USER:-horstenhomes}"
+DB_NAME="${DB_NAME:-horstenhomes}"
+
+SCHEMA="${1:-}"
+MODE="${2:-}"   # optional: --drop-schema
+
+usage() {
+  echo "Usage:"
+  echo "  ./bin/dev-delete-tenant <schema> [--drop-schema]"
+  echo ""
+  echo "Behavior:"
+  echo "  - Deletes Tenant + Domain rows from public schema"
+  echo "  - If --drop-schema is set, also DROPS the Postgres schema (DATA LOSS)"
+  echo ""
+  echo "Examples:"
+  echo "  ./bin/dev delete-tenant acme"
+  echo "  ./bin/dev delete-tenant acme --drop-schema"
+  exit 2
+}
+
+if [[ -z "${SCHEMA}" ]]; then
+  usage
+fi
+
+if ! docker ps --format '{{.Names}}' | grep -q "^${WEB_NAME}$"; then
+  echo "❌ ${WEB_NAME} is not running. Start it first:"
+  echo "   ./bin/dev up"
+  exit 1
+fi
+
+echo "▶ Deleting tenant record: ${SCHEMA}"
+docker exec -it "${WEB_NAME}" python manage.py shell -c "
+from apps.tenancy.models import Tenant, Domain
+Domain.objects.filter(tenant__schema_name='${SCHEMA}').delete()
+deleted, _ = Tenant.objects.filter(schema_name='${SCHEMA}').delete()
+print('deleted rows:', deleted)
+"
+
+if [[ "${MODE}" == "--drop-schema" ]]; then
+  echo "⚠️  Dropping Postgres schema '${SCHEMA}' (DATA LOSS)"
+  if ! docker ps --format '{{.Names}}' | grep -q "^${PG_NAME}$"; then
+    echo "❌ Postgres container ${PG_NAME} is not running."
+    exit 1
+  fi
+
+  docker exec -it "${PG_NAME}" psql -U "${DB_USER}" -d "${DB_NAME}" -c "DROP SCHEMA IF EXISTS \"${SCHEMA}\" CASCADE;"
+  echo "✅ Dropped schema: ${SCHEMA}"
+else
+  echo "ℹ️  Postgres schema '${SCHEMA}' was NOT dropped."
+  echo "   To drop it too: ./bin/dev delete-tenant ${SCHEMA} --drop-schema"
+fi
+
+echo "✅ Done."

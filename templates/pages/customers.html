@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Customers{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h1 class="h3 mb-0">Customers</h1>
+
+  <button
+          class="btn btn-primary"
+          hx-get="{% url 'customers:new' %}"
+          hx-target="#modalBody"
+          hx-trigger="click"
+          data-bs-toggle="modal"
+          data-bs-target="#mainModal">
+    + Add customer
+  </button>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <form class="row g-2" hx-get="{% url 'customers:table' %}" hx-target="#customersTable" hx-push-url="true">
+      <div class="col-sm-6 col-md-4">
+        <input
+                type="search"
+                name="q"
+                value="{{ q|default:'' }}"
+                class="form-control"
+                placeholder="Search customers..."
+                hx-get="{% url 'customers:table' %}"
+                hx-target="#customersTable"
+                hx-trigger="keyup changed delay:300ms"
+                hx-push-url="true"
+        >
+      </div>
+
+      <div class="col-sm-6 col-md-3">
+        <select
+                name="page_size"
+                class="form-select"
+                hx-get="{% url 'customers:table' %}"
+                hx-target="#customersTable"
+                hx-trigger="change"
+                hx-push-url="true">
+          {% for s in page_sizes %}
+          <option value="{{ s }}" {% if s == page_size %}selected{% endif %}>{{ s }} / page</option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- HTMX-injected table -->
+<div id="customersTable"
+     hx-get="{% url 'customers:table' %}?q={{ q|urlencode }}&page_size={{ page_size }}"
+     hx-trigger="load"
+     hx-target="#customersTable">
+  <div class="text-muted">Loading...</div>
+</div>
+
+<!-- Reusable modal -->
+{% include "components/modal.html" with modal_id="mainModal" body_id="modalBody" title="Customer" size="lg" %}
+{% endblock %}

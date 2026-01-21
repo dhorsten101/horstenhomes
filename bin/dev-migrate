@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WEB_NAME="${WEB_NAME:-hh-web}"
+ENV_FILE="${ENV_FILE:-.env.dev}"
+
+# Usage:
+#   ./bin/dev-migrate shared
+#   ./bin/dev-migrate tenant acme
+#   ./bin/dev-migrate all acme
+#   ./bin/dev-migrate make
+#   ./bin/dev-migrate make tenancy
+#
+# Notes:
+# - Requires hh-web running (so same env + code mount used).
+# - Runs migrations through django-tenants correctly.
+
+if [[ ! -f "${ENV_FILE}" ]]; then
+  echo "❌ Missing env file: ${ENV_FILE}"
+  exit 1
+fi
+
+if ! docker ps --format '{{.Names}}' | grep -q "^${WEB_NAME}$"; then
+  echo "❌ ${WEB_NAME} is not running. Start it first:"
+  echo "   ./bin/dev-up"
+  exit 1
+fi
+
+CMD="${1:-}"
+ARG="${2:-}"
+
+case "${CMD}" in
+  make)
+    if [[ -n "${ARG}" ]]; then
+      echo "▶ makemigrations ${ARG}"
+      docker exec -it "${WEB_NAME}" python manage.py makemigrations "${ARG}"
+    else
+      echo "▶ makemigrations"
+      docker exec -it "${WEB_NAME}" python manage.py makemigrations
+    fi
+    ;;
+
+  shared)
+    echo "▶ migrate_schemas --shared"
+    docker exec -it "${WEB_NAME}" python manage.py migrate_schemas --shared
+    ;;
+
+  tenant)
+    if [[ -z "${ARG}" ]]; then
+      echo "❌ Missing tenant schema name. Example:"
+      echo "   ./bin/dev-migrate tenant acme"
+      exit 1
+    fi
+    echo "▶ migrate_schemas --schema=${ARG}"
+    docker exec -it "${WEB_NAME}" python manage.py migrate_schemas --schema="${ARG}"
+    ;;
+
+  all)
+    # shared + one tenant schema in sequence (useful after changes)
+    if [[ -z "${ARG}" ]]; then
+      echo "❌ Missing tenant schema name. Example:"
+      echo "   ./bin/dev-migrate all acme"
+      exit 1
+    fi
+    echo "▶ migrate_schemas --shared"
+    docker exec -it "${WEB_NAME}" python manage.py migrate_schemas --shared
+    echo "▶ migrate_schemas --schema=${ARG}"
+    docker exec -it "${WEB_NAME}" python manage.py migrate_schemas --schema="${ARG}"
+    ;;
+
+  *)
+    echo "Usage:"
+    echo "  ./bin/dev-migrate make [app_label]"
+    echo "  ./bin/dev-migrate shared"
+    echo "  ./bin/dev-migrate tenant <schema>"
+    echo "  ./bin/dev-migrate all <schema>"
+    exit 2
+    ;;
+esac

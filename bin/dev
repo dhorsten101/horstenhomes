@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Resolve project root reliably (bash + zsh safe)
+SCRIPT_PATH="$0"
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+BIN_DIR="${ROOT_DIR}/bin"
+
+# ---- commands ----
+up()            { "${BIN_DIR}/dev-up"; }
+down()          { "${BIN_DIR}/dev-down" "$@"; }
+migrate()       { "${BIN_DIR}/dev-migrate" "$@"; }
+provision()     { "${BIN_DIR}/dev-provision" "$@"; }
+list_tenants()  { "${BIN_DIR}/dev-list-tenants"; }
+delete_tenant() { "${BIN_DIR}/dev-delete-tenant" "$@"; }
+status()        { "${BIN_DIR}/dev-status"; }
+health()        { "${BIN_DIR}/dev-health"; }
+logs()          { "${BIN_DIR}/dev-logs" "$@"; }
+reset_db()      { "${BIN_DIR}/dev-reset-db"; }
+
+check_bins() {
+  local missing=0
+  local f
+
+  for f in \
+    dev-up dev-down dev-migrate dev-provision \
+    dev-list-tenants dev-delete-tenant \
+    dev-status dev-health dev-logs dev-reset-db
+  do
+    if [[ ! -f "${BIN_DIR}/${f}" ]]; then
+      echo "❌ Missing script: ${BIN_DIR}/${f}"
+      missing=1
+    elif [[ ! -x "${BIN_DIR}/${f}" ]]; then
+      echo "❌ Script not executable: ${BIN_DIR}/${f}"
+      echo "   Fix: chmod +x ${BIN_DIR}/${f}"
+      missing=1
+    fi
+  done
+
+  if [[ "${missing}" -ne 0 ]]; then
+    echo ""
+    echo "Aborting due to missing/non-executable scripts."
+    exit 1
+  fi
+}
+
+usage() {
+  cat <<EOF
+Usage:
+  ./bin/dev <command> [args]
+
+Commands:
+  up
+      Start Postgres + Redis + Django (detached)
+
+  down [--all|--nuke]
+      Stop/remove containers
+      - default: remove web only
+      - --all : stop db/redis (keep containers + network)
+      - --nuke: remove db/redis containers (DATA LOSS) + remove network
+
+  migrate <shared|tenant|all|make> [...]
+      shared              Run migrate_schemas --shared
+      tenant <schema>     Run migrate_schemas --schema=<schema>
+      all <schema>        Run shared then tenant migrations
+      make [app_label]    Run makemigrations (optionally for one app)
+
+  provision <schema> <domain>
+      Create tenant schema + domains + migrate + tenant superuser
+
+  list-tenants
+      List all tenants + their domains
+
+  delete-tenant <schema> [--drop-schema]
+      Delete tenant rows from public; optionally drop Postgres schema (DATA LOSS)
+
+  status
+      Show container + network + tenant/domain status
+
+  health
+      Run HTTP health checks for tenant routing + admin
+
+  logs [web|db|redis|all] [lines]
+      Tail logs (default: web, 200 lines)
+
+  reset-db
+      Full dev DB reset (DATA LOSS) + shared migrate + tenant bootstrap
+
+Examples:
+  ./bin/dev up
+  ./bin/dev down --all
+  ./bin/dev migrate shared
+  ./bin/dev provision acme acme.horstenhomes.local
+  ./bin/dev list-tenants
+  ./bin/dev delete-tenant acme
+  ./bin/dev delete-tenant acme --drop-schema
+  ./bin/dev migrate tenant acme
+  ./bin/dev status
+  ./bin/dev health
+  ./bin/dev logs all 300
+  ./bin/dev reset-db
+EOF
+  exit 2
+}
+
+cmd="${1:-}"
+shift || true
+
+case "${cmd}" in
+  up|down|migrate|provision|list-tenants|delete-tenant|status|health|logs|reset-db)
+    check_bins
+    ;;
+esac
+
+case "${cmd}" in
+  up)            up ;;
+  down)          down "$@" ;;
+  migrate)       migrate "$@" ;;
+  provision)     provision "$@" ;;
+  list-tenants)  list_tenants ;;
+  delete-tenant) delete_tenant "$@" ;;
+  status)        status ;;
+  health)        health ;;
+  logs)          logs "$@" ;;
+  reset-db)      reset_db ;;
+  ""|help|-h|--help) usage ;;
+  *)
+    echo "❌ Unknown command: ${cmd}"
+    echo ""
+    usage
+    ;;
+esac

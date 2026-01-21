@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WEB_NAME="${WEB_NAME:-hh-web}"
+WEB_PORT="${WEB_PORT:-8000}"
+
+SCHEMA="${1:-}"
+DOMAIN="${2:-}"
+
+NAME="${TENANT_NAME:-${SCHEMA}}"
+SLUG="${TENANT_SLUG:-${SCHEMA}}"
+
+ADMIN_EMAIL="${ADMIN_EMAIL:-admin@${SCHEMA}.com}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-Rolo123!}"
+
+usage() {
+  echo "Usage:"
+  echo "  ./bin/dev-provision <schema> <domain>"
+  echo ""
+  echo "Example:"
+  echo "  ./bin/dev-provision acme acme.horstenhomes.local"
+  echo ""
+  echo "Env overrides:"
+  echo "  TENANT_NAME, TENANT_SLUG, ADMIN_EMAIL, ADMIN_PASSWORD, WEB_PORT"
+  exit 2
+}
+
+if [[ -z "${SCHEMA}" || -z "${DOMAIN}" ]]; then
+  usage
+fi
+
+if ! docker ps --format '{{.Names}}' | grep -q "^${WEB_NAME}$"; then
+  echo "❌ ${WEB_NAME} is not running. Start it first:"
+  echo "   ./bin/dev up"
+  exit 1
+fi
+
+echo "▶ Provisioning tenant:"
+echo "   schema : ${SCHEMA}"
+echo "   domain : ${DOMAIN}"
+echo "   name   : ${NAME}"
+echo "   slug   : ${SLUG}"
+echo "   admin  : ${ADMIN_EMAIL}"
+
+# Create tenant + domains (including host:port for dev convenience)
+docker exec -it "${WEB_NAME}" python manage.py shell -c "
+from apps.tenancy.models import Tenant, Domain
+
+schema='${SCHEMA}'
+domain='${DOMAIN}'
+name='${NAME}'
+slug='${SLUG}'
+web_port='${WEB_PORT}'
+
+Tenant.objects.filter(schema_name=schema).delete()
+
+t = Tenant(schema_name=schema, name=name, slug=slug)
+t.save()  # creates schema in Postgres
+
+domains = set([
+  domain,
+  f'{domain}:{web_port}',
+  'localhost',
+  f'localhost:{web_port}',
+  '127.0.0.1',
+  f'127.0.0.1:{web_port}',
+])
+
+for d in domains:
+    Domain.objects.get_or_create(domain=d, tenant=t, defaults={'is_primary': (d==domain)})
+
+print('tenant created:', t.schema_name)
+print('domains:', sorted(domains))
+"
+
+echo "▶ Migrating tenant schema: ${SCHEMA}"
+docker exec -it "${WEB_NAME}" python manage.py migrate_schemas --schema="${SCHEMA}"
+
+echo "▶ Creating/updating tenant superuser (${SCHEMA})"
+docker exec -it "${WEB_NAME}" python manage.py shell -c "
+from django_tenants.utils import schema_context
+from django.contrib.auth import get_user_model
+
+with schema_context('${SCHEMA}'):
+    User = get_user_model()
+    u, _ = User.objects.get_or_create(email='${ADMIN_EMAIL}', defaults={'is_staff': True, 'is_superuser': True})
+    u.is_staff = True
+    u.is_superuser = True
+    u.set_password('${ADMIN_PASSWORD}')
+    u.save()
+
+print('tenant superuser ready:', '${ADMIN_EMAIL}')
+"
+
+echo "✅ Provision complete."
+echo "   Tenant admin: http://${DOMAIN}:${WEB_PORT}/admin/"
+echo "   Login: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}"

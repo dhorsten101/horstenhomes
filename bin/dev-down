@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+NETWORK="${NETWORK:-horstenhomes-net}"
+
+WEB_NAME="${WEB_NAME:-hh-web}"
+PG_NAME="${PG_NAME:-hh-postgres}"
+REDIS_NAME="${REDIS_NAME:-hh-redis}"
+
+# Modes:
+#   ./bin/dev-down        -> remove web only (keeps DB/Redis running)
+#   ./bin/dev-down --all  -> remove web and stop DB/Redis (containers kept)
+#   ./bin/dev-down --nuke -> remove web and REMOVE DB/Redis containers (data loss) + remove network
+
+MODE="${1:-}"
+
+echo "▶ Stopping HorstenHomes dev environment..."
+
+remove_if_exists() {
+  local name="$1"
+  if docker ps -a --format '{{.Names}}' | grep -q "^${name}$"; then
+    echo "🧹 Removing container: ${name}"
+    docker rm -f "${name}" >/dev/null
+  else
+    echo "• Container not found: ${name}"
+  fi
+}
+
+stop_if_running() {
+  local name="$1"
+  if docker ps --format '{{.Names}}' | grep -q "^${name}$"; then
+    echo "⏹ Stopping container: ${name}"
+    docker stop "${name}" >/dev/null
+  else
+    echo "• Not running: ${name}"
+  fi
+}
+
+# Always remove web
+remove_if_exists "${WEB_NAME}"
+
+case "${MODE}" in
+  "" )
+    echo "✅ Web removed. Postgres/Redis left running."
+    ;;
+
+  "--all" )
+    stop_if_running "${PG_NAME}"
+    stop_if_running "${REDIS_NAME}"
+    echo "✅ Web removed. Postgres/Redis stopped (containers kept)."
+    echo "ℹ️  Network '${NETWORK}' intentionally kept to avoid stale-network issues."
+    ;;
+
+  "--nuke" )
+    remove_if_exists "${PG_NAME}"
+    remove_if_exists "${REDIS_NAME}"
+    echo "⚠️  Web removed. Postgres/Redis containers removed (DATA LOST)."
+
+    # Only remove the network in nuke mode (safe because containers are gone)
+    if docker network inspect "${NETWORK}" >/dev/null 2>&1; then
+      echo "🧹 Removing network: ${NETWORK}"
+      docker network rm "${NETWORK}" >/dev/null || true
+    fi
+    ;;
+
+  * )
+    echo "Usage:"
+    echo "  ./bin/dev-down          # remove web only"
+    echo "  ./bin/dev-down --all    # remove web + stop db/redis (keeps network)"
+    echo "  ./bin/dev-down --nuke   # remove web + remove db/redis + remove network (DATA LOSS)"
+    exit 2
+    ;;
+esac

@@ -1,0 +1,361 @@
+Below are final, ready-to-commit versions of both files, written cleanly and consistently for Horsten Homes.
+
+You can copy these verbatim into your repo as:
+	•	README.md
+	•	CONTRIBUTING.md
+
+They are aligned with:
+	•	your Docker-only dev model
+	•	schema-per-tenant architecture
+	•	./bin/dev CLI
+	•	single-server, non-K8s philosophy
+
+⸻
+
+📘 README.md
+
+# Horsten Homes
+
+Horsten Homes is a **SaaS platform with schema-per-tenant multi-tenancy**, built on Django and PostgreSQL.
+It is designed for **strong tenant isolation, operational clarity, and controlled scaling** without Kubernetes or docker-compose.
+
+This repository is **developer-focused** and optimized for Docker-based local development.
+
+---
+
+## Key Characteristics
+
+- Single Django project
+- PostgreSQL **schema-per-tenant** isolation
+- Public schema for control-plane data only
+- Tenant-local users and admin
+- Docker-first development
+- Explicit operational commands via `./bin/dev`
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-----|-----------|
+| Backend | Django 5.x |
+| Multi-tenancy | django-tenants |
+| Database | PostgreSQL 16 |
+| Cache / Broker | Redis |
+| Frontend | Django templates + HTMX |
+| Dev runtime | Docker |
+| Prod target | Ubuntu 22.04+ |
+| Orchestration | None (intentional) |
+
+---
+
+## Architecture Overview
+
+### Multi-Tenant Model
+
+- **Public schema**
+  - Tenant registry
+  - Domain routing
+  - No business data
+
+- **Tenant schemas**
+  - Users & auth
+  - Business models
+  - Fully isolated per tenant
+
+Each request is routed to a tenant schema via hostname.
+
+---
+
+## Repository Structure
+
+```text
+horstenhomes/
+├── apps/
+│   ├── tenancy/        # Tenant + Domain (public schema)
+│   ├── accounts/       # Custom tenant user model
+│   └── ...
+├── config/
+│   ├── settings/
+│   │   ├── base.py
+│   │   └── local.py
+│   └── urls.py
+├── bin/                # Dev CLI scripts
+├── Dockerfile.dev
+├── pyproject.toml
+├── .env.dev
+└── README.md
+
+
+⸻
+
+Local Development Requirements
+	•	Docker Desktop (required)
+	•	macOS or Linux
+	•	No local Python or virtualenv needed
+
+Non-Docker development is not supported.
+
+⸻
+
+Environment Setup
+
+Create .env.dev in the project root:
+
+DJANGO_SETTINGS_MODULE=config.settings.local
+DEBUG=1
+
+ALLOWED_HOSTS=localhost,127.0.0.1,acme.horstenhomes.local
+
+DB_NAME=horstenhomes
+DB_USER=horstenhomes
+DB_PASSWORD=horstenhomes
+DB_HOST=hh-postgres
+DB_PORT=5432
+
+REDIS_URL=redis://hh-redis:6379/0
+
+
+⸻
+
+Getting Started
+
+1. Start the environment
+
+./bin/dev up
+
+This starts:
+	•	PostgreSQL
+	•	Redis
+	•	Django dev server (detached)
+
+⸻
+
+2. Run shared migrations
+
+./bin/dev migrate shared
+
+
+⸻
+
+3. Provision a tenant
+
+./bin/dev provision acme acme.horstenhomes.local
+
+This will:
+	•	Create tenant + schema
+	•	Map domains
+	•	Run tenant migrations
+	•	Create a tenant admin user
+
+⸻
+
+4. Access the tenant
+
+http://acme.horstenhomes.local:8000/admin/
+
+
+⸻
+
+Dev CLI Reference
+
+All operations go through:
+
+./bin/dev <command>
+
+Environment control
+
+./bin/dev up
+./bin/dev down
+./bin/dev down --all
+./bin/dev down --nuke
+
+
+⸻
+
+Migrations
+
+./bin/dev migrate shared
+./bin/dev migrate tenant <schema>
+./bin/dev migrate all <schema>
+./bin/dev migrate make [app]
+
+
+⸻
+
+Tenant lifecycle
+
+./bin/dev provision <schema> <domain>
+./bin/dev list-tenants
+./bin/dev delete-tenant <schema>
+./bin/dev delete-tenant <schema> --drop-schema
+
+⚠️ --drop-schema is destructive and for dev only.
+
+⸻
+
+Diagnostics
+
+./bin/dev status
+./bin/dev health
+./bin/dev logs
+./bin/dev logs all 300
+
+
+⸻
+
+Common Issues
+
+“No tenant for hostname”
+	•	Tenant not provisioned
+	•	Domain not mapped
+	•	Fix with:
+
+./bin/dev provision <schema> <domain>
+
+
+
+Schema does not exist
+	•	Database was reset
+	•	Tenants must be reprovisioned
+
+Admin returns 404
+	•	Admin is tenant-scoped
+	•	Access via tenant domain, not localhost
+
+⸻
+
+Production Notes
+	•	Designed for single-server deployment
+	•	No Kubernetes
+	•	No docker-compose
+	•	Recommended:
+	•	Nginx
+	•	Gunicorn
+	•	systemd
+	•	Managed PostgreSQL
+
+⸻
+
+Guardrails
+	•	Never mix shared and tenant models in one app
+	•	Never run tenant migrations before shared
+	•	Never access admin via public schema
+	•	Never bypass ./bin/dev
+
+⸻
+
+Horsten Homes is intentionally opinionated:
+explicit over implicit, predictable over clever.
+
+---
+
+# 📕 `CONTRIBUTING.md`
+
+```md
+# Contributing to Horsten Homes
+
+This project is a multi-tenant SaaS system with strict architectural and operational rules.
+Contributions must preserve tenant isolation and deployment safety.
+
+---
+
+## Development Rules
+
+- Docker is mandatory
+- No local virtualenvs
+- No docker-compose
+- Do not run manage.py directly on your host
+- All operations go through `./bin/dev`
+
+If Docker is not running, you cannot contribute.
+
+---
+
+## Branching Strategy
+
+- `main` → stable and deployable
+- Feature branches:
+
+feature/
+fix/
+
+---
+
+## Running the Project
+
+```bash
+./bin/dev up
+./bin/dev migrate shared
+./bin/dev provision acme acme.horstenhomes.local
+
+
+⸻
+
+Migration Rules (CRITICAL)
+	•	Shared apps → ./bin/dev migrate shared
+	•	Tenant apps → ./bin/dev migrate tenant <schema>
+	•	Never mix shared + tenant models in one app
+	•	Never edit migration files manually
+
+Violating these rules can break tenant isolation.
+
+⸻
+
+Tenant Safety Rules
+	•	Never drop schemas manually in Postgres
+	•	Always use:
+
+./bin/dev delete-tenant <schema>
+
+
+	•	Use --drop-schema only in development
+
+⸻
+
+Code Expectations
+	•	No cross-tenant queries
+	•	No direct schema switching outside approved utilities
+	•	Clear separation between public and tenant apps
+	•	Explicit imports
+	•	No hidden side effects at import time
+
+⸻
+
+What NOT to Do
+
+❌ Run manage.py directly
+❌ Add tenant models to public apps
+❌ Assume public schema contains business data
+❌ Bypass CLI tooling
+❌ “Just try something” in production
+
+⸻
+
+Pull Request Expectations
+
+PRs must:
+	•	Migrate cleanly (shared + tenant)
+	•	Not break tenant routing
+	•	Not introduce schema leaks
+	•	Follow existing patterns
+
+If in doubt, ask before merging.
+
+⸻
+
+This project prioritizes operational safety over convenience.
+
+---
+
+## ✅ What you now have
+
+- Clear onboarding (`README.md`)
+- Strong guardrails (`CONTRIBUTING.md`)
+- A professional SaaS documentation baseline
+- Something you can confidently hand to another engineer
+
+If you want next, I can:
+- Add `ARCHITECTURE.md`
+- Add `docs/DEV_WORKFLOWS.md`
+- Or help you freeze v1 and move into feature delivery

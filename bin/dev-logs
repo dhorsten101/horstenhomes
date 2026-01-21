@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WEB_NAME="${WEB_NAME:-hh-web}"
+PG_NAME="${PG_NAME:-hh-postgres}"
+REDIS_NAME="${REDIS_NAME:-hh-redis}"
+
+TARGET="${1:-web}"
+LINES="${2:-200}"
+
+usage() {
+  echo "Usage:"
+  echo "  ./bin/dev-logs [web|db|redis|all] [lines]"
+  echo ""
+  echo "Examples:"
+  echo "  ./bin/dev-logs web"
+  echo "  ./bin/dev-logs db 300"
+  echo "  ./bin/dev-logs all"
+  exit 2
+}
+
+tail_one() {
+  local name="$1"
+  if docker ps -a --format '{{.Names}}' | grep -q "^${name}$"; then
+    echo "==============================="
+    echo " Logs: ${name}"
+    echo "==============================="
+    docker logs -f --tail "${LINES}" "${name}"
+  else
+    echo "• Container not found: ${name}"
+  fi
+}
+
+case "${TARGET}" in
+  web)
+    tail_one "${WEB_NAME}"
+    ;;
+  db|postgres|pg)
+    tail_one "${PG_NAME}"
+    ;;
+  redis)
+    tail_one "${REDIS_NAME}"
+    ;;
+  all)
+    echo "▶ Tailing all logs (Ctrl+C to stop)."
+    echo "   (Running in background; output interleaves.)"
+    docker logs -f --tail "${LINES}" "${WEB_NAME}" &
+    pid1=$!
+    docker logs -f --tail "${LINES}" "${PG_NAME}" &
+    pid2=$!
+    docker logs -f --tail "${LINES}" "${REDIS_NAME}" &
+    pid3=$!
+
+    trap 'kill ${pid1} ${pid2} ${pid3} >/dev/null 2>&1 || true' INT TERM
+    wait
+    ;;
+  *)
+    usage
+    ;;
+esac
