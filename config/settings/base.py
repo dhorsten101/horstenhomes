@@ -93,6 +93,7 @@ MIDDLEWARE = [
 	
 	# MUST be before auth/session middleware
 	"django_tenants.middleware.main.TenantMainMiddleware",
+	"apps.tenancy.middleware.TenantStatusMiddleware",
 	
 	"django.contrib.sessions.middleware.SessionMiddleware",
 	"django.middleware.common.CommonMiddleware",

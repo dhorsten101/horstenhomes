@@ -1,5 +1,19 @@
+from django.core.validators import RegexValidator
 from django.db import models
 from django_tenants.models import TenantMixin, DomainMixin
+
+class TenantStatus(models.TextChoices):
+	PENDING = "pending", "Pending"
+	PROVISIONING = "provisioning", "Provisioning"
+	ACTIVE = "active", "Active"
+	SUSPENDED = "suspended", "Suspended"
+	FAILED = "failed", "Failed"
+
+
+slug_validator = RegexValidator(
+	regex=r"^[a-z0-9]+(?:-[a-z0-9]+)*$",
+	message="Slug must be lowercase letters, numbers, and hyphens only.",
+)
 
 
 class Tenant(TenantMixin):
@@ -9,8 +23,24 @@ class Tenant(TenantMixin):
 	name = models.CharField(max_length=200)
 	slug = models.SlugField(unique=True)
 	
+	status = models.CharField(
+		max_length=20,
+		choices=TenantStatus.choices,
+		default=TenantStatus.PENDING,
+		db_index=True,
+	)
+	
+	created_at = models.DateTimeField(auto_now_add=True)
+
 	# django-tenants will create the schema automatically when saving the tenant
 	auto_create_schema = True
+
+
+	def save(self, *args, **kwargs):
+		self.slug = (self.slug or "").lower()
+		if self.schema_name != "public":
+			self.schema_name = self.slug
+		super().save(*args, **kwargs)
 	
 	def __str__(self) -> str:
 		return f"{self.name} ({self.schema_name})"
