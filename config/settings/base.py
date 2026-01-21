@@ -25,12 +25,18 @@ ALLOWED_HOSTS = [
 
 SHARED_APPS = (
 	"django_tenants",
+	
+	# Public schema needs these if you want /admin/ on public
+	"django.contrib.admin",
+	"django.contrib.auth",
 	"django.contrib.contenttypes",
+	"django.contrib.sessions",
 	"django.contrib.messages",
 	"django.contrib.staticfiles",
 	
 	# Public (control-plane) schema
 	"apps.tenancy",
+	"apps.accounts"
 )
 
 TENANT_APPS = (

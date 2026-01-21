@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -e
+
+PROJECT_NAME="horstenhomes"
+CONTAINER_NAME="hh-web"
+IMAGE_NAME="horstenhomes-dev:latest"
+NETWORK="horstenhomes-net"
+PORT="8000"
+
+echo "▶ Starting Django dev server..."
+
+# Stop and remove existing container if it exists
+if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+  echo "⚠ Removing existing container ${CONTAINER_NAME}"
+  docker rm -f ${CONTAINER_NAME}
+fi
+
+docker run --rm -it \
+  --name ${CONTAINER_NAME} \
+  --network ${NETWORK} \
+  --env-file .env.dev \
+  -p ${PORT}:8000 \
+  -v "$(pwd)":/app \
+  ${IMAGE_NAME} \
+  python manage.py runserver 0.0.0.0:8000
