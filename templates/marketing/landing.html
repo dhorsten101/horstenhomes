@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Horsten Homes{% endblock %}
+
+{% block content %}
+    <div class="container py-5">
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+
+                <h1 class="display-5 fw-bold mb-3">
+                    Horsten Homes
+                </h1>
+                <p class="lead text-muted mb-4">
+                    Multi-tenant SaaS platform — secure, isolated, and built for scale.
+                </p>
+                <a href="/signup/" class="btn btn-primary btn-lg">
+                    Sign Up
+                </a>
+                <a href="/pricing/" class="btn btn-success btn-lg">
+                    Pricing
+                </a>
+                <a href="/admin/" class="btn btn-primary btn-lg">
+                    Admin
+                </a>
+                <a class="btn btn-secondary btn-lg" href="http://admin.horstenhomes.local:8000/admin/">Provision</a>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

@@ -38,8 +38,11 @@ class Tenant(TenantMixin):
 
 	def save(self, *args, **kwargs):
 		self.slug = (self.slug or "").lower()
-		if self.schema_name != "public":
+		
+		# Only set schema_name for non-public tenants when schema_name is blank
+		if not self.schema_name:
 			self.schema_name = self.slug
+		
 		super().save(*args, **kwargs)
 	
 	def __str__(self) -> str:

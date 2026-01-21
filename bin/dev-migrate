@@ -7,13 +7,16 @@ ENV_FILE="${ENV_FILE:-.env.dev}"
 # Usage:
 #   ./bin/dev-migrate shared
 #   ./bin/dev-migrate tenant acme
-#   ./bin/dev-migrate all acme
+#   ./bin/dev-migrate tenants
+#   ./bin/dev-migrate all            # shared + all tenants
+#   ./bin/dev-migrate all acme       # shared + one tenant
 #   ./bin/dev-migrate make
 #   ./bin/dev-migrate make tenancy
 #
 # Notes:
-# - Requires hh-web running (so same env + code mount used).
-# - Runs migrations through django-tenants correctly.
+# - Requires hh-web running (same env + code mount used).
+# - Uses django-tenants migrate_schemas correctly.
+# - "tenants" migrates every tenant schema in the Tenant table.
 
 if [[ ! -f "${ENV_FILE}" ]]; then
   echo "❌ Missing env file: ${ENV_FILE}"
@@ -22,7 +25,7 @@ fi
 
 if ! docker ps --format '{{.Names}}' | grep -q "^${WEB_NAME}$"; then
   echo "❌ ${WEB_NAME} is not running. Start it first:"
-  echo "   ./bin/dev-up"
+  echo "   ./bin/dev up"
   exit 1
 fi
 
@@ -48,32 +51,43 @@ case "${CMD}" in
   tenant)
     if [[ -z "${ARG}" ]]; then
       echo "❌ Missing tenant schema name. Example:"
-      echo "   ./bin/dev-migrate tenant acme"
+      echo "   ./bin/dev migrate tenant acme"
       exit 1
     fi
     echo "▶ migrate_schemas --schema=${ARG}"
     docker exec -it "${WEB_NAME}" python manage.py migrate_schemas --schema="${ARG}"
     ;;
 
+  tenants)
+    # all tenants (every schema except public)
+    echo "▶ migrate_schemas --tenant"
+    docker exec -it "${WEB_NAME}" python manage.py migrate_schemas --tenant
+    ;;
+
   all)
-    # shared + one tenant schema in sequence (useful after changes)
+    # shared + all tenants (default deploy sequence)
     if [[ -z "${ARG}" ]]; then
-      echo "❌ Missing tenant schema name. Example:"
-      echo "   ./bin/dev-migrate all acme"
-      exit 1
+      echo "▶ migrate_schemas --shared"
+      docker exec -it "${WEB_NAME}" python manage.py migrate_schemas --shared
+      echo "▶ migrate_schemas --tenant"
+      docker exec -it "${WEB_NAME}" python manage.py migrate_schemas --tenant
+    else
+      # shared + one tenant schema in sequence (handy during dev)
+      echo "▶ migrate_schemas --shared"
+      docker exec -it "${WEB_NAME}" python manage.py migrate_schemas --shared
+      echo "▶ migrate_schemas --schema=${ARG}"
+      docker exec -it "${WEB_NAME}" python manage.py migrate_schemas --schema="${ARG}"
     fi
-    echo "▶ migrate_schemas --shared"
-    docker exec -it "${WEB_NAME}" python manage.py migrate_schemas --shared
-    echo "▶ migrate_schemas --schema=${ARG}"
-    docker exec -it "${WEB_NAME}" python manage.py migrate_schemas --schema="${ARG}"
     ;;
 
   *)
     echo "Usage:"
-    echo "  ./bin/dev-migrate make [app_label]"
-    echo "  ./bin/dev-migrate shared"
-    echo "  ./bin/dev-migrate tenant <schema>"
-    echo "  ./bin/dev-migrate all <schema>"
+    echo "  ./bin/dev migrate make [app_label]"
+    echo "  ./bin/dev migrate shared"
+    echo "  ./bin/dev migrate tenant <schema>"
+    echo "  ./bin/dev migrate tenants"
+    echo "  ./bin/dev migrate all            # shared + all tenants"
+    echo "  ./bin/dev migrate all <schema>   # shared + one tenant"
     exit 2
     ;;
 esac
