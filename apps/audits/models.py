@@ -1,13 +1,27 @@
 from __future__ import annotations
 
-from django.conf import settings
+import uuid
+
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 
 class AuditStatus(models.TextChoices):
 	SUCCESS = "success", "Success"
 	FAILURE = "failure", "Failure"
+
+
+class AuditEventQuerySet(models.QuerySet):
+	def hard_delete(self):
+		"""
+		Bypass model.delete() / signals. Intended for retention purges.
+		"""
+		return self._raw_delete(self.db)
+
+
+class AuditEventManager(models.Manager.from_queryset(AuditEventQuerySet)):
+	pass
 
 
 class AuditEvent(models.Model):
@@ -18,6 +32,7 @@ class AuditEvent(models.Model):
 	"""
 	
 	created_at = models.DateTimeField(default=timezone.now, db_index=True)
+	event_id = models.UUIDField(default=uuid.uuid4, editable=False, db_index=True)
 	
 	# Correlation / tracing
 	request_id = models.CharField(max_length=64, blank=True, db_index=True)
@@ -28,6 +43,8 @@ class AuditEvent(models.Model):
 	actor_email = models.CharField(max_length=254, blank=True, db_index=True)
 	
 	# Request context
+	request_method = models.CharField(max_length=10, blank=True)
+	request_path = models.CharField(max_length=300, blank=True)
 	ip_address = models.GenericIPAddressField(null=True, blank=True)
 	user_agent = models.TextField(blank=True)
 	
@@ -45,6 +62,8 @@ class AuditEvent(models.Model):
 	changes = models.JSONField(default=dict, blank=True)   # {"field": {"from": x, "to": y}, ...}
 	metadata = models.JSONField(default=dict, blank=True)  # extra context
 	
+	objects = AuditEventManager()
+	
 	class Meta:
 		ordering = ["-created_at"]
 		indexes = [
@@ -55,3 +74,13 @@ class AuditEvent(models.Model):
 	
 	def __str__(self) -> str:
 		return f"[{self.created_at:%Y-%m-%d %H:%M:%S}] {self.action} ({self.status})"
+
+	def save(self, *args, **kwargs):
+		# Treat audit logs as append-only.
+		if self.pk is not None:
+			raise ValidationError("AuditEvent is immutable (append-only).")
+		return super().save(*args, **kwargs)
+
+	def delete(self, *args, **kwargs):
+		# Use AuditEvent.objects.filter(...).hard_delete() for retention purges.
+		raise ValidationError("AuditEvent cannot be deleted via ORM delete().")

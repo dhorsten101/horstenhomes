@@ -54,8 +54,9 @@ class DevPasswordResetDoneView(PasswordResetDoneView):
 
 	def get_context_data(self, **kwargs):
 		ctx = super().get_context_data(**kwargs)
-		# Pop so refresh doesn't keep showing an old link
-		ctx["dev_reset_link"] = self.request.session.pop(self.SESSION_KEY, None)
+		# Keep link available for refresh/copy during testing.
+		ctx["dev_reset_link"] = self.request.session.get(self.SESSION_KEY)
+		ctx["debug"] = settings.DEBUG
 		return ctx
 
 # Create your views here.

@@ -41,6 +41,7 @@ SHARED_APPS = (
 	"apps.accounts",
 	"apps.onboarding",
 	"apps.marketing",
+	"apps.platform",
 	# "apps.audits",
 )
 

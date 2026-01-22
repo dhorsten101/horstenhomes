@@ -58,5 +58,8 @@ urlpatterns = [
     
     # Admin (public schema on admin.*; tenant schema on tenant hostnames)
     path("admin/", admin.site.urls),
+
+    # Platform admin (public schema only; staff only)
+    path("platform/", include("apps.platform.urls")),
     
 ]

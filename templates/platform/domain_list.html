@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Domains | Platform{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h1 class="h4 mb-0">Domains</h1>
+  <a class="btn btn-sm btn-outline-secondary" href="{% url 'platform:dashboard' %}">Back</a>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} mb-2" role="alert">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<div class="table-responsive">
+  <table class="table table-sm align-middle">
+    <thead>
+      <tr>
+        <th>Domain</th>
+        <th>Tenant</th>
+        <th>Primary</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in domains %}
+        <tr>
+          <td><code>{{ d.domain }}</code></td>
+          <td>{{ d.tenant.slug }}</td>
+          <td>{% if d.is_primary %}<span class="badge bg-success">yes</span>{% else %}<span class="badge bg-secondary">no</span>{% endif %}</td>
+          <td class="text-end">
+            <form method="post" action="{% url 'platform:domain_delete' d.id %}" class="d-inline"
+                  onsubmit="return confirm('Delete this domain?');">
+              {% csrf_token %}
+              <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4" class="text-muted">No domains.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+

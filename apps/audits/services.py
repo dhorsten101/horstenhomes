@@ -6,6 +6,7 @@ from django.db import transaction
 
 from .middleware import get_audit_context
 from .models import AuditEvent, AuditStatus
+from .utils import to_jsonable
 
 
 def _obj_meta(obj) -> tuple[str, str, str]:
@@ -45,12 +46,14 @@ def audit_log(
 		action=action,
 		status=status,
 		message=(message or "")[:500],
-		changes=changes or {},
-		metadata=metadata or {},
+		changes=to_jsonable(changes or {}),
+		metadata=to_jsonable(metadata or {}),
 		object_type=object_type,
 		object_id=object_id,
 		object_repr=object_repr,
 		request_id=request_id or (ctx.request_id if ctx else ""),
+		request_method=(ctx.request_method if ctx else ""),
+		request_path=(ctx.request_path if ctx else ""),
 		tenant_schema=tenant_schema or (ctx.tenant_schema if ctx else ""),
 		actor_user_id=actor_user_id or (ctx.actor_user_id if ctx else ""),
 		actor_email=actor_email or (ctx.actor_email if ctx else ""),

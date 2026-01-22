@@ -4,6 +4,7 @@ import uuid
 from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Optional
+from time import perf_counter
 
 from django.utils.deprecation import MiddlewareMixin
 
@@ -19,6 +20,8 @@ class AuditContext:
 	request_id: str
 	ip_address: Optional[str]
 	user_agent: str
+	request_method: str
+	request_path: str
 	tenant_schema: str
 	actor_user_id: str
 	actor_email: str
@@ -38,6 +41,7 @@ class AuditContextMiddleware(MiddlewareMixin):
 	"""
 	
 	def process_request(self, request):
+		request._audit_start = perf_counter()
 		request_id = request.headers.get("X-Request-ID") or uuid.uuid4().hex
 		
 		# Best-effort IP extraction (dev/proxy safe)
@@ -57,17 +61,20 @@ class AuditContextMiddleware(MiddlewareMixin):
 		user = getattr(request, "user", None)
 		actor_user_id = str(getattr(user, "pk", "")) if getattr(user, "is_authenticated", False) else ""
 		actor_email = str(getattr(user, "email", "")) if getattr(user, "is_authenticated", False) else ""
-		
-		_audit_ctx.set(
+
+		token = _audit_ctx.set(
 			AuditContext(
 				request_id=request_id,
 				ip_address=ip,
 				user_agent=ua,
+				request_method=getattr(request, "method", "") or "",
+				request_path=getattr(request, "path", "") or "",
 				tenant_schema=tenant_schema,
 				actor_user_id=actor_user_id,
 				actor_email=actor_email,
 			)
 		)
+		request._audit_ctx_token = token
 		
 		# Optional: expose request_id in response for debugging
 		request.audit_request_id = request_id
@@ -76,4 +83,20 @@ class AuditContextMiddleware(MiddlewareMixin):
 		rid = getattr(request, "audit_request_id", None)
 		if rid:
 			response["X-Request-ID"] = rid
+		# prevent context leakage between requests
+		token = getattr(request, "_audit_ctx_token", None)
+		if token is not None:
+			try:
+				_audit_ctx.reset(token)
+			except Exception:
+				_audit_ctx.set(None)
 		return response
+
+	def process_exception(self, request, exception):
+		token = getattr(request, "_audit_ctx_token", None)
+		if token is not None:
+			try:
+				_audit_ctx.reset(token)
+			except Exception:
+				_audit_ctx.set(None)
+		return None
