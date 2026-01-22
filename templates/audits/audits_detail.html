@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Audit Event{% endblock %}
+
+{% block content %}
+    <div class="container py-4">
+        <a class="btn btn-sm btn-outline-secondary mb-3" href="/audit/">← Back</a>
+
+        <h1 class="h4">Audit Event #{{ ev.id }}</h1>
+
+        <div class="card">
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">Time</dt><dd class="col-sm-9">{{ ev.created_at }}</dd>
+                    <dt class="col-sm-3">Schema</dt><dd class="col-sm-9">{{ ev.tenant_schema }}</dd>
+                    <dt class="col-sm-3">Request ID</dt><dd class="col-sm-9">{{ ev.request_id }}</dd>
+                    <dt class="col-sm-3">Actor</dt><dd class="col-sm-9">{{ ev.actor_email|default:"(system)" }}</dd>
+                    <dt class="col-sm-3">IP</dt><dd class="col-sm-9">{{ ev.ip_address }}</dd>
+                    <dt class="col-sm-3">Action</dt><dd class="col-sm-9">{{ ev.action }}</dd>
+                    <dt class="col-sm-3">Status</dt><dd class="col-sm-9">{{ ev.status }}</dd>
+                    <dt class="col-sm-3">Object</dt><dd class="col-sm-9">{{ ev.object_type }} {{ ev.object_id }}</dd>
+                    <dt class="col-sm-3">Message</dt><dd class="col-sm-9">{{ ev.message }}</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="row mt-3 g-3">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Changes</div>
+                    <div class="card-body">
+                        <pre class="mb-0">{{ ev.changes }}</pre>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Metadata</div>
+                    <div class="card-body">
+                        <pre class="mb-0">{{ ev.metadata }}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

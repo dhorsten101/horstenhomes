@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Audit Log{% endblock %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="h3 mb-0">Audit Log</h1>
+        </div>
+
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-md-4">
+                <input class="form-control" name="action" placeholder="Action contains…" value="{{ filters.action }}">
+            </div>
+            <div class="col-md-4">
+                <input class="form-control" name="actor" placeholder="Actor email contains…" value="{{ filters.actor }}">
+            </div>
+            <div class="col-md-4">
+                <input class="form-control" name="request_id" placeholder="Request ID" value="{{ filters.request_id }}">
+            </div>
+            <div class="col-12">
+                <button class="btn btn-primary">Filter</button>
+                <a class="btn btn-outline-secondary" href="/audit/">Reset</a>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Schema</th>
+                    <th>Action</th>
+                    <th>Status</th>
+                    <th>Actor</th>
+                    <th>Object</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for ev in page.object_list %}
+                    <tr>
+                        <td class="text-nowrap">{{ ev.created_at }}</td>
+                        <td class="text-nowrap">{{ ev.tenant_schema|default:"(unknown)" }}</td>
+                        <td>{{ ev.action }}</td>
+                        <td>
+                            {% if ev.status == "success" %}
+                                <span class="badge text-bg-success">success</span>
+                            {% else %}
+                                <span class="badge text-bg-danger">failure</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ ev.actor_email|default:"(system)" }}</td>
+                        <td class="text-nowrap">{{ ev.object_type }}{% if ev.object_id %} #{{ ev.object_id }}{% endif %}</td>
+                        <td class="text-nowrap"><a class="btn btn-sm btn-outline-primary" href="/audit/{{ ev.id }}/">View</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7" class="text-muted">No audit events.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <nav class="mt-3">
+            <ul class="pagination">
+                {% if page.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page.previous_page_number }}&action={{ filters.action }}&actor={{ filters.actor }}&request_id={{ filters.request_id }}">Prev</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Prev</span></li>
+                {% endif %}
+
+                <li class="page-item disabled"><span class="page-link">Page {{ page.number }} / {{ page.paginator.num_pages }}</span></li>
+
+                {% if page.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page.next_page_number }}&action={{ filters.action }}&actor={{ filters.actor }}&request_id={{ filters.request_id }}">Next</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+
+    </div>
+{% endblock %}

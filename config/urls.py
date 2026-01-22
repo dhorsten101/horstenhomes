@@ -11,6 +11,9 @@ urlpatterns = [
     # Tenant UI (tenant schema)
     path("", include("apps.web.urls")),
     
+    path("", include("apps.audits.urls")),
+    
     # Admin (public schema on admin.*; tenant schema on tenant hostnames)
     path("admin/", admin.site.urls),
+    
 ]

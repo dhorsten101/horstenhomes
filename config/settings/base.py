@@ -33,13 +33,15 @@ SHARED_APPS = (
 	"django.contrib.sessions",
 	"django.contrib.messages",
 	"django.contrib.staticfiles",
+	"apps.audits.apps.AuditsConfig",
+	
 	
 	# Public (control-plane) schema
 	"apps.tenancy",
 	"apps.accounts",
 	"apps.onboarding",
 	"apps.marketing",
-
+	# "apps.audits",
 )
 
 TENANT_APPS = (
@@ -48,10 +50,13 @@ TENANT_APPS = (
 	"django.contrib.contenttypes",
 	"django.contrib.sessions",
 	"django.contrib.messages",
+	"apps.audits.apps.AuditsConfig",
+	
 	
 	# Tenant-local apps
 	"apps.accounts",
 	"apps.web",
+	# "apps.audits",
 )
 
 
@@ -97,6 +102,9 @@ MIDDLEWARE = [
 	
 	# MUST be before auth/session middleware
 	"django_tenants.middleware.main.TenantMainMiddleware",
+	"apps.audits.middleware.AuditContextMiddleware",
+	
+	
 	"apps.tenancy.middleware.TenantStatusMiddleware",
 	
 	"django.contrib.sessions.middleware.SessionMiddleware",
