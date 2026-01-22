@@ -2,13 +2,7 @@ from django.contrib import admin
 from .models import AuditEvent
 
 from apps.audits.admin_mixins import AdminAuditMixin
-from ..tenancy.models import Tenant
 
-
-@admin.register(Tenant)
-class TenantAdmin(AdminAuditMixin):
-	audit_action_prefix = "admin.tenant"
-	
 
 @admin.register(AuditEvent)
 class AuditEventAdmin(admin.ModelAdmin):

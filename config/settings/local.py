@@ -9,3 +9,7 @@ ALLOWED_HOSTS = [
 	"admin.horstenhomes.local",
 	".horstenhomes.local",
 ]
+
+# Dev-friendly: print password reset links to console logs
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "no-reply@horstenhomes.local"

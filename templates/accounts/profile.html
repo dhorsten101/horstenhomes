@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Profile | Horsten Homes{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12 col-lg-8">
+    <h1 class="h4 mb-3">Your account</h1>
+
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="mb-2"><span class="text-muted">Email:</span> <strong>{{ user.email }}</strong></div>
+        <div class="mb-3"><span class="text-muted">Tenant:</span> <strong>{{ request.tenant.schema_name }}</strong></div>
+
+        <div class="d-flex gap-2 flex-wrap">
+          <a class="btn btn-primary" href="/admin/">Admin console</a>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-muted mt-3 mb-0">
+      User management is done via the tenant admin console for now.
+    </p>
+  </div>
+</div>
+{% endblock %}
+

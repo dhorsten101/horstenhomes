@@ -27,7 +27,12 @@
             </span>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/logout/">Logout</a>
+          <form method="post" action="/logout/" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="nav-link btn btn-link p-0" style="text-decoration: none;">
+              Logout
+            </button>
+          </form>
         </li>
         {% else %}
         <li class="nav-item">

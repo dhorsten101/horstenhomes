@@ -1,10 +1,7 @@
 from django.core.management.base import BaseCommand
-from django.core.management import call_command
-from django_tenants.utils import schema_context
-from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 
-from apps.tenancy.models import Tenant, Domain
-import re
+from apps.tenancy.services.onboarding import create_tenant_record, provision_tenant
 
 
 class Command(BaseCommand):
@@ -16,26 +13,25 @@ class Command(BaseCommand):
 		parser.add_argument("--slug", required=True)
 		parser.add_argument("--domain", required=True)
 		parser.add_argument("--admin-email", required=True)
-		parser.add_argument("--admin-password", required=True)
+		parser.add_argument("--admin-password", required=False)
 	
 	def handle(self, *args, **opts):
-		slug = opts["slug"].lower().strip()
-		schema_name = re.sub(r"[^a-z0-9_]", "_", slug)
-		
-		tenant = Tenant.objects.create(
-			name=opts["name"],
-			slug=slug,
-			schema_name=schema_name,)
-		# tenant = Tenant.objects.create(name=opts["name"], slug=opts["slug"])
-		Domain.objects.create(domain=opts["domain"], tenant=tenant, is_primary=True)
-		
-		call_command("migrate_schemas", schema_name=tenant.schema_name, interactive=False, verbosity=1)
-		
-		with schema_context(tenant.schema_name):
-			User = get_user_model()
-			User.objects.create_superuser(opts["admin_email"], opts["admin_password"])
+		name = (opts["name"] or "").strip()
+		slug = (opts["slug"] or "").strip().lower()
+		domain = (opts["domain"] or "").strip().lower()
+		admin_email = (opts["admin_email"] or "").strip().lower()
+		admin_password = (opts.get("admin_password") or "").strip()
+
+		if not name or not slug or not domain or not admin_email:
+			raise ValidationError("Missing required inputs: name, slug, domain, admin_email")
+
+		tenant = create_tenant_record(name=name, slug=slug, domain=domain, is_primary=True)
+		provision_tenant(
+			tenant=tenant,
+			admin_email=admin_email,
+			admin_password=admin_password or None,
+		)
 		
 		self.stdout.write(self.style.SUCCESS(
-			f"Provisioned tenant schema={tenant.schema_name}, domain={opts['domain']}"
+			f"Provisioned tenant schema={tenant.schema_name}, domain={domain}"
 		))
-		

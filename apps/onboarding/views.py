@@ -7,11 +7,13 @@ from .models import TenantRequest
 
 def signup_view(request):
 	if request.method == "POST":
+		contact_email = request.POST.get("contact_email", "").strip().lower()
 		TenantRequest.objects.create(
 			company_name=request.POST.get("company_name", "").strip(),
 			desired_slug=request.POST.get("desired_slug", "").strip().lower(),
 			contact_name=request.POST.get("contact_name", "").strip(),
-			contact_email=request.POST.get("contact_email", "").strip().lower(),
+			contact_email=contact_email,
+			admin_email=contact_email,
 			contact_phone=request.POST.get("contact_phone", "").strip(),
 		)
 		return HttpResponseRedirect(reverse("tenant_signup_done"))

@@ -23,10 +23,10 @@ def audit_list(request):
 	paginator = Paginator(qs, 50)
 	page = paginator.get_page(request.GET.get("page"))
 	
-	return render(request, "audits/list.html", {"page": page, "filters": {"action": action, "actor": actor, "request_id": rid}})
+	return render(request, "audits/audits_list.html", {"page": page, "filters": {"action": action, "actor": actor, "request_id": rid}})
 
 
 @staff_member_required
 def audit_detail(request, pk: int):
 	ev = get_object_or_404(AuditEvent, pk=pk)
-	return render(request, "audits/detail.html", {"ev": ev})
+	return render(request, "audits/audits_detail.html", {"ev": ev})

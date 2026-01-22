@@ -17,6 +17,10 @@ class TenantRequest(models.Model):
 	contact_email = models.EmailField()
 	contact_phone = models.CharField(max_length=40, blank=True)
 	
+	# Email to be used for the initial tenant admin user (created in the tenant schema).
+	# Stored in public schema only as part of the onboarding request workflow.
+	admin_email = models.EmailField(blank=True)
+	
 	notes = models.TextField(blank=True)
 	
 	status = models.CharField(

@@ -93,6 +93,9 @@ PUBLIC_SCHEMA_NAME = "public"
 # -------------------------------------------------
 AUTH_USER_MODEL = "accounts.User"
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/accounts/profile/"
+LOGOUT_REDIRECT_URL = "/login/"
 
 # -------------------------------------------------
 # Middleware (ORDER MATTERS)

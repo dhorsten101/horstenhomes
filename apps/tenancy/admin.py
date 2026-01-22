@@ -67,3 +67,9 @@ class DomainAdmin(AdminAuditMixin):
 	list_display = ("domain", "tenant", "is_primary")
 	search_fields = ("domain", "tenant__slug")
 	list_filter = ("is_primary",)
+
+
+if Tenant not in admin.site._registry:
+	admin.site.register(Tenant, TenantAdmin)
+if Domain not in admin.site._registry:
+	admin.site.register(Domain, DomainAdmin)

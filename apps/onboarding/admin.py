@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib import admin, messages
 from django.utils import timezone
+from django.utils.html import format_html
 
 from apps.audits.admin_mixins import AdminAuditMixin
 from apps.audits.models import AuditStatus
@@ -25,9 +26,10 @@ class TenantRequestAdmin(AdminAuditMixin, admin.ModelAdmin):
 	
 	audit_action_prefix = "admin.tenantrequest"
 	
-	list_display = ("company_name", "contact_email", "desired_slug", "status", "created_at")
+	list_display = ("company_name", "contact_email", "admin_email", "desired_slug", "status", "created_at")
+	list_editable = ("admin_email",)
 	list_filter = ("status",)
-	search_fields = ("company_name", "contact_email", "desired_slug")
+	search_fields = ("company_name", "contact_email", "admin_email", "desired_slug")
 	ordering = ("-created_at",)
 	actions = ("action_approve_and_provision",)
 	
@@ -100,15 +102,28 @@ class TenantRequestAdmin(AdminAuditMixin, admin.ModelAdmin):
 			
 			# Provision schema + migrate + create tenant admin user (inside your service)
 			try:
+				admin_email = (tr.admin_email or tr.contact_email or "").strip().lower()
+
 				audit_log(
 					action="onboarding.provision_started",
 					obj=tenant,
-					metadata={"domain": domain, "tenant_request_id": tr.id},
+					metadata={"domain": domain, "tenant_request_id": tr.id, "admin_email": admin_email},
 					tenant_schema="public",
 					request_id=str(tr.id),
 				)
 				
-				provision_tenant(tenant=tenant, admin_email=tr.contact_email)
+				reset_payload = provision_tenant(tenant=tenant, admin_email=admin_email)
+				if reset_payload:
+					# Build a tenant-local set-password link (no email sending required).
+					host = request.get_host()  # e.g. admin.horstenhomes.local:8000
+					port = host.split(":", 1)[1] if ":" in host else ""
+					tenant_host = f"{domain}:{port}" if port else domain
+					link = f"http://{tenant_host}/reset/{reset_payload['uidb64']}/{reset_payload['token']}/"
+					self.message_user(
+						request,
+						format_html("Set-password link for {}: <a href='{}'>{}</a>", admin_email, link, link),
+						level=messages.WARNING,
+					)
 				
 				tenant.status = TenantStatus.ACTIVE
 				tenant.save(update_fields=["status"])
