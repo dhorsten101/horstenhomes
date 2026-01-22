@@ -42,7 +42,7 @@ SHARED_APPS = (
 	"apps.onboarding",
 	"apps.marketing",
 	"apps.platform",
-	# "apps.audits",
+	"apps.logs.apps.LogsConfig",
 )
 
 TENANT_APPS = (
@@ -57,7 +57,7 @@ TENANT_APPS = (
 	# Tenant-local apps
 	"apps.accounts",
 	"apps.web",
-	# "apps.audits",
+	"apps.logs.apps.LogsConfig",
 )
 
 
@@ -117,6 +117,10 @@ MIDDLEWARE = [
 	"django.contrib.auth.middleware.AuthenticationMiddleware",
 	"django.contrib.messages.middleware.MessageMiddleware",
 	"django.middleware.clickjacking.XFrameOptionsMiddleware",
+	# Performance + DB slow query alerts
+	"apps.logs.middleware.PerformanceAlertMiddleware",
+	# Persist unhandled exceptions as alerts
+	"apps.logs.middleware.ExceptionAlertMiddleware",
 ]
 
 # -------------------------------------------------
@@ -165,4 +169,33 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # -------------------------------------------------
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
+
+# -------------------------------------------------
+# Logging
+# -------------------------------------------------
+LOGGING = {
+	"version": 1,
+	"disable_existing_loggers": False,
+	"handlers": {
+		"db": {
+			"level": "INFO",
+			"class": "apps.logs.handlers.DatabaseLogHandler",
+		},
+	},
+	"root": {
+		"handlers": ["db"],
+		"level": "INFO",
+	},
+	"loggers": {
+		# allow fine-grained level control without flooding logs
+		"db.query": {"level": "WARNING"},
+		"web.request": {"level": "WARNING"},
+	},
+}
+
+# -------------------------------------------------
+# Alert thresholds (ms)
+# -------------------------------------------------
+SLOW_REQUEST_MS = int(os.environ.get("SLOW_REQUEST_MS", "1000"))
+SLOW_DB_QUERY_MS = int(os.environ.get("SLOW_DB_QUERY_MS", "200"))
 

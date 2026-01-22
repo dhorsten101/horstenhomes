@@ -35,5 +35,60 @@
 
 {% block js %}{% endblock %}
 
+<script>
+(() => {
+  const endpoint = "/logs/client/";
+  const maxLen = 5000;
+
+  function send(level, message, extra = {}) {
+    try {
+      const payload = {
+        level,
+        message: ("" + message).slice(0, maxLen),
+        url: location.href,
+        ts: Date.now(),
+        ...extra,
+      };
+      fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      }).catch(() => {});
+    } catch (_) {}
+  }
+
+  // Capture unhandled errors
+  window.addEventListener("error", (e) => {
+    send("ERROR", e.message || "window.error", {
+      source: e.filename,
+      lineno: e.lineno,
+      colno: e.colno,
+      stack: e.error && e.error.stack ? e.error.stack : "",
+    });
+  });
+
+  window.addEventListener("unhandledrejection", (e) => {
+    const reason = e.reason;
+    send("ERROR", "unhandledrejection", {
+      reason: reason ? (reason.message || ("" + reason)) : "",
+      stack: reason && reason.stack ? reason.stack : "",
+    });
+  });
+
+  // Hook console warnings/errors
+  const origWarn = console.warn;
+  const origErr = console.error;
+  console.warn = function (...args) {
+    send("WARNING", args.map(String).join(" ").slice(0, maxLen));
+    return origWarn.apply(console, args);
+  };
+  console.error = function (...args) {
+    send("ERROR", args.map(String).join(" ").slice(0, maxLen));
+    return origErr.apply(console, args);
+  };
+})();
+</script>
+
 </body>
 </html>

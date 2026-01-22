@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Metrics | Platform{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h1 class="h4 mb-0">Metrics</h1>
+  <a class="btn btn-sm btn-outline-secondary" href="{% url 'platform:dashboard' %}">Back</a>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small mb-2">Load average</div>
+        <div class="fw-semibold">{{ m.loadavg_1 }} / {{ m.loadavg_5 }} / {{ m.loadavg_15 }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small mb-2">Memory (kB)</div>
+        <div class="small">Total: <strong>{{ m.mem_total_kb }}</strong></div>
+        <div class="small">Available: <strong>{{ m.mem_available_kb }}</strong></div>
+        <div class="small">Web RSS: <strong>{{ m.rss_kb }}</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small mb-2">Disk (/)</div>
+        <div class="small">Total: <strong>{{ m.disk_total_bytes }}</strong></div>
+        <div class="small">Used: <strong>{{ m.disk_used_bytes }}</strong></div>
+        <div class="small">Free: <strong>{{ m.disk_free_bytes }}</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

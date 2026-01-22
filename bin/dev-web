@@ -9,6 +9,23 @@ PORT="8000"
 
 echo "▶ Starting Django dev server..."
 
+# Best-effort docker socket mount (needed for /platform/system-logs in dev)
+DOCKER_SOCK_SRC="${DOCKER_SOCK_SRC:-}"
+if [[ -z "${DOCKER_SOCK_SRC}" ]]; then
+  if [[ -S "/var/run/docker.sock" ]]; then
+    DOCKER_SOCK_SRC="/var/run/docker.sock"
+  elif [[ -S "${HOME}/.docker/run/docker.sock" ]]; then
+    DOCKER_SOCK_SRC="${HOME}/.docker/run/docker.sock"
+  fi
+fi
+DOCKER_SOCK_MOUNT=()
+if [[ -n "${DOCKER_SOCK_SRC}" && -S "${DOCKER_SOCK_SRC}" ]]; then
+  DOCKER_SOCK_MOUNT=(-v "${DOCKER_SOCK_SRC}:/var/run/docker.sock")
+  echo "▶ Mounting docker socket for system logs: ${DOCKER_SOCK_SRC}"
+else
+  echo "⚠️  Docker socket not found; /platform/system-logs will be unavailable."
+fi
+
 # Stop and remove existing container if it exists
 if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
   echo "⚠ Removing existing container ${CONTAINER_NAME}"
@@ -21,5 +38,6 @@ docker run --rm -it \
   --env-file .env.dev \
   -p ${PORT}:8000 \
   -v "$(pwd)":/app \
+  "${DOCKER_SOCK_MOUNT[@]}" \
   ${IMAGE_NAME} \
   python manage.py runserver 0.0.0.0:8000

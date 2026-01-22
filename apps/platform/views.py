@@ -10,10 +10,19 @@ from django.utils import timezone
 
 from apps.audits.models import AuditStatus
 from apps.audits.services import audit_log
+from apps.audits.models import AuditEvent
 from apps.onboarding.models import TenantRequest, TenantRequestStatus
 from apps.tenancy.models import Domain, Tenant, TenantStatus
 from apps.tenancy.services.onboarding import provision_tenant, suspend_tenant, activate_tenant
+from apps.logs.models import LogEntry
+import subprocess
+import shutil
+from apps.logs.metrics import get_system_metrics
 
+try:
+	from django_tenants.utils import schema_context
+except Exception:  # pragma: no cover
+	schema_context = None
 
 def _public_schema_required(view: Callable[..., HttpResponse]):
 	"""
@@ -283,4 +292,170 @@ def domain_delete_view(request: HttpRequest, pk: int) -> HttpResponse:
 	audit_log(action="domain.deleted", obj=None, metadata={"domain": d, "tenant": tenant_slug, "source": "platform_ui"})
 	messages.success(request, f"Deleted domain: {d}")
 	return redirect("platform:domain_list")
+
+
+@staff_member_required
+@_public_schema_required
+def log_list_view(request: HttpRequest) -> HttpResponse:
+	"""
+	View runtime logs. Default schema=public; optional schema=<tenant_schema>.
+	"""
+	schema = (request.GET.get("schema") or "public").strip()
+	limit = min(int(request.GET.get("limit") or 200), 1000)
+	level = (request.GET.get("level") or "").strip().upper()
+
+	def fetch():
+		qs = LogEntry.objects.all().order_by("-created_at")
+		if level:
+			qs = qs.filter(level=level)
+		return qs[:limit]
+
+	if schema != "public":
+		if schema_context is None:
+			raise Http404()
+		with schema_context(schema):
+			rows = list(fetch())
+	else:
+		rows = list(fetch())
+
+	# Populate schema choices from public schema.
+	schemas = ["public"]
+	if schema_context is not None:
+		with schema_context("public"):
+			schemas += list(Tenant.objects.exclude(schema_name="public").values_list("schema_name", flat=True))
+
+	return render(
+		request,
+		"platform/log_list.html",
+		{"logs": rows, "schema": schema, "schemas": schemas, "limit": limit, "level": level},
+	)
+
+
+@staff_member_required
+@_public_schema_required
+def audit_list_view(request: HttpRequest) -> HttpResponse:
+	"""
+	View audit events. Default schema=public; optional schema=<tenant_schema>.
+	"""
+	schema = (request.GET.get("schema") or "public").strip()
+	limit = min(int(request.GET.get("limit") or 200), 1000)
+	status = (request.GET.get("status") or "").strip().lower()
+
+	def fetch():
+		qs = AuditEvent.objects.all().order_by("-created_at")
+		if status in {"success", "failure"}:
+			qs = qs.filter(status=status)
+		return list(qs[:limit])
+
+	if schema != "public":
+		if schema_context is None:
+			raise Http404()
+		with schema_context(schema):
+			rows = fetch()
+	else:
+		rows = fetch()
+
+	schemas = ["public"]
+	if schema_context is not None:
+		with schema_context("public"):
+			schemas += list(Tenant.objects.exclude(schema_name="public").values_list("schema_name", flat=True))
+
+	return render(
+		request,
+		"platform/audit_list.html",
+		{"audits": rows, "schema": schema, "schemas": schemas, "limit": limit, "status": status},
+	)
+
+
+@staff_member_required
+@_public_schema_required
+def alert_list_view(request: HttpRequest) -> HttpResponse:
+	"""
+	Alerts = high-severity runtime logs + failing audit events (simple, production-safe baseline).
+	"""
+	schema = (request.GET.get("schema") or "public").strip()
+	limit = min(int(request.GET.get("limit") or 200), 1000)
+
+	def fetch_logs():
+		return list(
+			LogEntry.objects.filter(level__in=["ERROR", "CRITICAL"]).order_by("-created_at")[:limit]
+		)
+
+	def fetch_audits():
+		return list(
+			AuditEvent.objects.filter(status=AuditStatus.FAILURE).order_by("-created_at")[:limit]
+		)
+
+	if schema != "public":
+		if schema_context is None:
+			raise Http404()
+		with schema_context(schema):
+			error_logs = fetch_logs()
+			failed_audits = fetch_audits()
+	else:
+		error_logs = fetch_logs()
+		failed_audits = fetch_audits()
+
+	schemas = ["public"]
+	if schema_context is not None:
+		with schema_context("public"):
+			schemas += list(Tenant.objects.exclude(schema_name="public").values_list("schema_name", flat=True))
+
+	return render(
+		request,
+		"platform/alert_list.html",
+		{"schema": schema, "schemas": schemas, "limit": limit, "error_logs": error_logs, "failed_audits": failed_audits},
+	)
+
+
+@staff_member_required
+@_public_schema_required
+def system_logs_view(request: HttpRequest) -> HttpResponse:
+	"""
+	Show raw docker logs for core services (dev-focused).
+	Requires docker CLI in the web container + docker socket mounted.
+	"""
+	service = (request.GET.get("service") or "web").strip().lower()
+	tail = min(int(request.GET.get("tail") or 300), 5000)
+
+	containers = {
+		"web": "hh-web",
+		"postgres": "hh-postgres",
+		"redis": "hh-redis",
+	}
+	name = containers.get(service, "hh-web")
+
+	docker_path = shutil.which("docker")
+	output = ""
+	error = ""
+
+	if not docker_path:
+		error = "docker CLI not available in container (rebuild dev image with docker CLI)."
+	else:
+		try:
+			res = subprocess.run(
+				["docker", "logs", "--tail", str(tail), name],
+				check=False,
+				capture_output=True,
+				text=True,
+				timeout=5,
+			)
+			output = (res.stdout or "") + (res.stderr or "")
+			if res.returncode != 0:
+				error = f"docker logs exited {res.returncode}"
+		except Exception as e:
+			error = f"{type(e).__name__}: {e}"
+
+	return render(
+		request,
+		"platform/system_logs.html",
+		{"service": service, "tail": tail, "output": output, "error": error, "services": list(containers.keys())},
+	)
+
+
+@staff_member_required
+@_public_schema_required
+def metrics_view(request: HttpRequest) -> HttpResponse:
+	m = get_system_metrics()
+	return render(request, "platform/metrics.html", {"m": m})
 

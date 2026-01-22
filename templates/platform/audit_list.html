@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Audits | Platform{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h1 class="h4 mb-0">Audits</h1>
+  <a class="btn btn-sm btn-outline-secondary" href="{% url 'platform:dashboard' %}">Back</a>
+</div>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+  <div class="col-12 col-md-4">
+    <label class="form-label">Schema</label>
+    <select name="schema" class="form-select">
+      {% for s in schemas %}
+        <option value="{{ s }}" {% if s == schema %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-12 col-md-3">
+    <label class="form-label">Status</label>
+    <select name="status" class="form-select">
+      <option value="" {% if not status %}selected{% endif %}>(any)</option>
+      <option value="success" {% if status == "success" %}selected{% endif %}>success</option>
+      <option value="failure" {% if status == "failure" %}selected{% endif %}>failure</option>
+    </select>
+  </div>
+  <div class="col-12 col-md-3">
+    <label class="form-label">Limit</label>
+    <input class="form-control" type="number" name="limit" value="{{ limit }}" min="1" max="1000"/>
+  </div>
+  <div class="col-12 col-md-2">
+    <button class="btn btn-primary w-100" type="submit">Apply</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-sm align-middle">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Status</th>
+        <th>Action</th>
+        <th>Actor</th>
+        <th>Path</th>
+        <th>Object</th>
+        <th>Message</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in audits %}
+        <tr>
+          <td class="text-muted small">{{ a.created_at }}</td>
+          <td>
+            {% if a.status == "failure" %}
+              <span class="badge bg-danger">failure</span>
+            {% else %}
+              <span class="badge bg-secondary">success</span>
+            {% endif %}
+          </td>
+          <td><code>{{ a.action }}</code></td>
+          <td class="text-muted small">{{ a.actor_email|default:"-" }}</td>
+          <td class="text-muted small"><code>{{ a.request_method }} {{ a.request_path }}</code></td>
+          <td class="text-muted small"><code>{{ a.object_type }} {{ a.object_id }}</code></td>
+          <td style="max-width: 420px; white-space: pre-wrap;">{{ a.message }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="7" class="text-muted">No audit events.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+

@@ -20,5 +20,10 @@ urlpatterns = [
 	path("tenants/<int:pk>/delete/", views.tenant_delete_view, name="tenant_delete"),
 	path("domains/", views.domain_list_view, name="domain_list"),
 	path("domains/<int:pk>/delete/", views.domain_delete_view, name="domain_delete"),
+	path("logs/", views.log_list_view, name="log_list"),
+	path("audits/", views.audit_list_view, name="audit_list"),
+	path("alerts/", views.alert_list_view, name="alert_list"),
+	path("metrics/", views.metrics_view, name="metrics"),
+	path("system-logs/", views.system_logs_view, name="system_logs"),
 ]
 

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Logs | Platform{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h1 class="h4 mb-0">Logs</h1>
+  <a class="btn btn-sm btn-outline-secondary" href="{% url 'platform:dashboard' %}">Back</a>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} mb-2" role="alert">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<form method="get" class="row g-2 align-items-end mb-3">
+  <div class="col-12 col-md-4">
+    <label class="form-label">Schema</label>
+    <select name="schema" class="form-select">
+      {% for s in schemas %}
+        <option value="{{ s }}" {% if s == schema %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-12 col-md-3">
+    <label class="form-label">Level</label>
+    <select name="level" class="form-select">
+      <option value="" {% if not level %}selected{% endif %}>(any)</option>
+      <option value="DEBUG" {% if level == "DEBUG" %}selected{% endif %}>DEBUG</option>
+      <option value="INFO" {% if level == "INFO" %}selected{% endif %}>INFO</option>
+      <option value="WARNING" {% if level == "WARNING" %}selected{% endif %}>WARNING</option>
+      <option value="ERROR" {% if level == "ERROR" %}selected{% endif %}>ERROR</option>
+      <option value="CRITICAL" {% if level == "CRITICAL" %}selected{% endif %}>CRITICAL</option>
+    </select>
+  </div>
+  <div class="col-12 col-md-3">
+    <label class="form-label">Limit</label>
+    <input class="form-control" type="number" name="limit" value="{{ limit }}" min="1" max="1000"/>
+  </div>
+  <div class="col-12 col-md-2">
+    <button class="btn btn-primary w-100" type="submit">Apply</button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-sm align-middle">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Level</th>
+        <th>Logger</th>
+        <th>Req</th>
+        <th>Path</th>
+        <th>Message</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for l in logs %}
+        <tr>
+          <td class="text-muted small">{{ l.created_at }}</td>
+          <td><span class="badge bg-secondary">{{ l.level }}</span></td>
+          <td><code>{{ l.logger }}</code></td>
+          <td class="text-muted small"><code>{{ l.request_id|default:"-" }}</code></td>
+          <td class="text-muted small"><code>{{ l.request_method }} {{ l.request_path }}</code></td>
+          <td style="max-width: 520px; white-space: pre-wrap;">{{ l.message }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" class="text-muted">No logs.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+

@@ -82,12 +82,30 @@ echo "▶ Starting Django container: ${WEB_NAME}"
 # remove old web if exists (so name is stable)
 docker rm -f "${WEB_NAME}" >/dev/null 2>&1 || true
 
+# Best-effort docker socket mount (needed for /platform/system-logs in dev)
+DOCKER_SOCK_SRC="${DOCKER_SOCK_SRC:-}"
+if [[ -z "${DOCKER_SOCK_SRC}" ]]; then
+  if [[ -S "/var/run/docker.sock" ]]; then
+    DOCKER_SOCK_SRC="/var/run/docker.sock"
+  elif [[ -S "${HOME}/.docker/run/docker.sock" ]]; then
+    DOCKER_SOCK_SRC="${HOME}/.docker/run/docker.sock"
+  fi
+fi
+DOCKER_SOCK_MOUNT=()
+if [[ -n "${DOCKER_SOCK_SRC}" && -S "${DOCKER_SOCK_SRC}" ]]; then
+  DOCKER_SOCK_MOUNT=(-v "${DOCKER_SOCK_SRC}:/var/run/docker.sock")
+  echo "▶ Mounting docker socket for system logs: ${DOCKER_SOCK_SRC}"
+else
+  echo "⚠️  Docker socket not found; /platform/system-logs will be unavailable."
+fi
+
 # Start detached so PyCharm can stop it via a separate command, and you can tail logs.
 docker run -d --name "${WEB_NAME}" --network "${NETWORK}" \
   --env-file "${ENV_FILE}" \
   -e PYTHONPATH=/app \
   -p "${WEB_PORT}:8000" \
   -v "$(pwd)":/app \
+  "${DOCKER_SOCK_MOUNT[@]}" \
   "${WEB_IMAGE}" \
   python manage.py runserver 0.0.0.0:8000 >/dev/null
 

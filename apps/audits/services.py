@@ -34,6 +34,8 @@ def audit_log(
 		request_id: str = "",
 		ip_address: Optional[str] = None,
 		user_agent: str = "",
+		# If True (default), write after transaction commit. If False, write immediately.
+		defer: bool = True,
 ) -> None:
 	"""
 	Appends an audit event after the current DB transaction commits.
@@ -63,5 +65,8 @@ def audit_log(
 	
 	def _write():
 		AuditEvent.objects.create(**payload)
-	
-	transaction.on_commit(_write)
+
+	if defer:
+		transaction.on_commit(_write)
+	else:
+		_write()

@@ -37,6 +37,51 @@
       </div>
     </div>
   </div>
+  <div class="col-12 col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Logs</div>
+        <div class="fs-4 fw-semibold">View</div>
+        <a class="btn btn-sm btn-primary mt-3" href="{% url 'platform:log_list' %}">Open</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Audits</div>
+        <div class="fs-4 fw-semibold">View</div>
+        <a class="btn btn-sm btn-primary mt-3" href="{% url 'platform:audit_list' %}">Open</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Alerts</div>
+        <div class="fs-4 fw-semibold">View</div>
+        <a class="btn btn-sm btn-primary mt-3" href="{% url 'platform:alert_list' %}">Open</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">System logs</div>
+        <div class="fs-4 fw-semibold">Docker</div>
+        <a class="btn btn-sm btn-primary mt-3" href="{% url 'platform:system_logs' %}">Open</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-muted small">Metrics</div>
+        <div class="fs-4 fw-semibold">CPU / Mem / Disk</div>
+        <a class="btn btn-sm btn-primary mt-3" href="{% url 'platform:metrics' %}">Open</a>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
