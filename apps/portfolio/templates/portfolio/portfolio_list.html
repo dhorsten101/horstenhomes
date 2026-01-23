@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Portfolios{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h1 class="h3 mb-0">Portfolios</h1>
+      <div class="text-muted small">Your property portfolios</div>
+    </div>
+    <a class="btn btn-primary" href="{% url 'portfolio:create' %}">New portfolio</a>
+  </div>
+
+  <form class="row g-2 mb-3" method="get">
+    <div class="col-md-8">
+      <input class="form-control" name="q" value="{{ q }}" placeholder="Search name..." />
+    </div>
+    <div class="col-md-4 d-flex gap-2">
+      <button class="btn btn-outline-secondary" type="submit">Search</button>
+      <a class="btn btn-outline-secondary" href="{% url 'portfolio:list' %}">Clear</a>
+    </div>
+  </form>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-striped mb-0 align-middle">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Owner</th>
+            <th>Properties</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in portfolios %}
+          <tr>
+            <td>
+              <a href="{% url 'portfolio:detail' p.pk %}" class="text-decoration-none">{{ p.name }}</a>
+            </td>
+            <td>
+              {% if p.owner_contact %}
+                <a href="{% url 'contacts:detail' p.owner_contact.pk %}">{{ p.owner_contact }}</a>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>{{ p.property_count }}</td>
+            <td>
+              {% if p.is_archived %}
+                <span class="badge text-bg-secondary">Archived</span>
+              {% else %}
+                <span class="badge text-bg-success">Active</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-secondary" href="{% url 'portfolio:update' p.pk %}">Edit</a>
+              <form method="post" action="{% url 'portfolio:delete' p.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete this portfolio?">
+                  Delete
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center text-muted py-4">No portfolios yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if is_paginated %}
+  <nav class="mt-3">
+    <ul class="pagination">
+      {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?q={{ q }}&page={{ page_obj.previous_page_number }}">Previous</a></li>
+      {% else %}
+      <li class="page-item disabled"><span class="page-link">Previous</span></li>
+      {% endif %}
+      <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+      {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?q={{ q }}&page={{ page_obj.next_page_number }}">Next</a></li>
+      {% else %}
+      <li class="page-item disabled"><span class="page-link">Next</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}
+

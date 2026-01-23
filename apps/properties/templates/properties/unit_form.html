@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}{% if form.instance.pk %}Edit unit{% else %}New unit{% endif %}{% endblock %}
+
+{% block content %}
+{% url "properties:unit_list" as back_url %}
+{% if form.instance.pk %}
+  {% include "components/crud_model_form.html" with title="Edit unit" back_url=back_url cancel_url=back_url submit_text="Save" %}
+{% else %}
+  {% include "components/crud_model_form.html" with title="New unit" back_url=back_url cancel_url=back_url submit_text="Save" %}
+{% endif %}
+{% endblock %}
+

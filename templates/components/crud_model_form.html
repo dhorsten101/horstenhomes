@@ -1,0 +1,42 @@
+{# Reusable Bootstrap form renderer for ModelForms #}
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h3 mb-0">{{ title }}</h1>
+    {% if back_url %}
+      <a class="btn btn-outline-secondary" href="{{ back_url }}">Back</a>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="row g-3">
+          {% for field in form %}
+            <div class="col-12">
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+              {% for err in field.errors %}<div class="text-danger small">{{ err }}</div>{% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="mt-3 d-flex gap-2">
+          <button class="btn btn-primary" type="submit">{{ submit_text|default:"Save" }}</button>
+          {% if cancel_url %}
+            <a class="btn btn-outline-secondary" href="{{ cancel_url }}">Cancel</a>
+          {% elif back_url %}
+            <a class="btn btn-outline-secondary" href="{{ back_url }}">Cancel</a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

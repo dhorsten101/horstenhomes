@@ -32,6 +32,8 @@ class AuditEvent(models.Model):
 	"""
 	
 	created_at = models.DateTimeField(default=timezone.now, db_index=True)
+	updated_at = models.DateTimeField(auto_now=True)
+	tags = models.JSONField(default=list, blank=True)
 	event_id = models.UUIDField(default=uuid.uuid4, editable=False, db_index=True)
 	
 	# Correlation / tracing

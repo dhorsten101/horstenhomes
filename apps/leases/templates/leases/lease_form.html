@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}{% if form.instance.pk %}Edit lease{% else %}New lease{% endif %}{% endblock %}
+
+{% block content %}
+{% url "leases:list" as back_url %}
+{% if form.instance.pk %}
+  {% include "components/crud_model_form.html" with title="Edit lease" back_url=back_url cancel_url=back_url submit_text="Save" %}
+{% else %}
+  {% include "components/crud_model_form.html" with title="New lease" back_url=back_url cancel_url=back_url submit_text="Save" %}
+{% endif %}
+{% endblock %}
+

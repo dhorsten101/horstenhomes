@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}{% if form.instance.pk %}Edit contact{% else %}New contact{% endif %}{% endblock %}
+
+{% block content %}
+{% url "contacts:list" as back_url %}
+{% if form.instance.pk %}
+  {% include "components/crud_model_form.html" with title="Edit contact" back_url=back_url cancel_url=back_url submit_text="Save" %}
+{% else %}
+  {% include "components/crud_model_form.html" with title="New contact" back_url=back_url cancel_url=back_url submit_text="Save" %}
+{% endif %}
+{% endblock %}
+

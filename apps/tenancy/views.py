@@ -1,3 +1,5 @@
-from django.shortcuts import render
+"""
+Tenancy app: models, middleware, and provisioning live here.
 
-# Create your views here.
+Tenant-facing UI is implemented in other apps (e.g. `apps.web`, `apps.platform`).
+"""

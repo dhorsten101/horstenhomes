@@ -15,53 +15,79 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         {% if user.is_authenticated %}
 
-        {% if user.is_staff %}
-        <li class="nav-item">
-          <a class="nav-link" href="/platform/">Platform</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/platform/logs/">Logs</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/platform/audits/">Audits</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/platform/alerts/">Alerts</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/platform/metrics/">Metrics</a>
-        </li>
+          <li class="nav-item dropdown">
+            <a
+              class="nav-link dropdown-toggle"
+              href="{% url 'crm_dashboard' %}"
+              role="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              CRM
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{% url 'crm_dashboard' %}">Dashboard</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="{% url 'portfolio:list' %}">Portfolios</a></li>
+              <li><a class="dropdown-item" href="{% url 'properties:property_list' %}">Properties</a></li>
+              <li><a class="dropdown-item" href="{% url 'properties:unit_list' %}">Units</a></li>
+              <li><a class="dropdown-item" href="{% url 'leases:list' %}">Leases</a></li>
+              <li><a class="dropdown-item" href="{% url 'contacts:list' %}">Contacts</a></li>
+              <li><a class="dropdown-item" href="{% url 'addresses:list' %}">Addresses</a></li>
+            </ul>
+          </li>
+
+          {% if user.is_staff %}
             <li class="nav-item">
-                <a class="nav-link" href="/admin/">Admin</a>
+              <a class="nav-link" href="/platform/">Platform</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/platform/logs/">Logs</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/platform/audits/">Audits</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/platform/alerts/">Alerts</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/platform/metrics/">Metrics</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/">Admin</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="/pricing/">Pricing</a>
-          </li>
-        {% endif %}
+            </li>
+          {% endif %}
         {% endif %}
       </ul>
 
       <ul class="navbar-nav ms-auto">
-          
         {% if user.is_authenticated %}
-        <li class="nav-item">
+          <li class="nav-item">
             <span class="navbar-text me-3">
               {{ user.email }}
             </span>
-        </li>
-        <li class="nav-item">
-          <form method="post" action="/logout/" class="d-inline">
-            {% csrf_token %}
-            <button type="submit" class="nav-link btn btn-link p-0 d-flex align-items-center" style="text-decoration: none;" aria-label="Log out">
-              <i class="bi bi-box-arrow-right fs-5" aria-hidden="true"></i>
-              <span class="visually-hidden">Log out</span>
-            </button>
-          </form>
-        </li>
+          </li>
+          <li class="nav-item">
+            <form method="post" action="/logout/" class="d-inline">
+              {% csrf_token %}
+              <button
+                type="submit"
+                class="nav-link btn btn-link p-0 d-flex align-items-center"
+                style="text-decoration: none;"
+                aria-label="Log out"
+              >
+                <i class="bi bi-box-arrow-right fs-5" aria-hidden="true"></i>
+                <span class="visually-hidden">Log out</span>
+              </button>
+            </form>
+          </li>
         {% else %}
-        <li class="nav-item">
-          <a class="nav-link" href="/login/">Login</a>
-        </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/login/">Login</a>
+          </li>
         {% endif %}
       </ul>
     </div>

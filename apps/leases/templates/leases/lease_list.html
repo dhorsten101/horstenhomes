@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Leases{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h1 class="h3 mb-0">Leases</h1>
+      <div class="text-muted small">Tenancies / agreements</div>
+    </div>
+    <a class="btn btn-primary" href="{% url 'leases:create' %}">New lease</a>
+  </div>
+
+  <form class="row g-2 mb-3" method="get">
+    <div class="col-md-8">
+      <input class="form-control" name="q" value="{{ q }}" placeholder="Search unit, property, tenant..." />
+    </div>
+    <div class="col-md-4 d-flex gap-2">
+      <button class="btn btn-outline-secondary" type="submit">Search</button>
+      <a class="btn btn-outline-secondary" href="{% url 'leases:list' %}">Clear</a>
+    </div>
+  </form>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-striped mb-0 align-middle">
+        <thead>
+          <tr>
+            <th>Unit</th>
+            <th>Tenant</th>
+            <th>Status</th>
+            <th>Start</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for l in leases %}
+          <tr>
+            <td>
+              <a class="text-decoration-none" href="{% url 'leases:detail' l.pk %}">
+                {{ l.unit.property.name }} · {{ l.unit.unit_number }}
+              </a>
+            </td>
+            <td>
+              <a href="{% url 'contacts:detail' l.primary_tenant.pk %}">{{ l.primary_tenant.display_name }}</a>
+            </td>
+            <td>{{ l.get_status_display }}</td>
+            <td>{{ l.start_date|date:"Y-m-d" }}</td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-secondary" href="{% url 'leases:update' l.pk %}">Edit</a>
+              <form method="post" action="{% url 'leases:delete' l.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete this lease?">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="text-center text-muted py-4">No leases yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

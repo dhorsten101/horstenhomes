@@ -58,5 +58,3 @@ class DevPasswordResetDoneView(PasswordResetDoneView):
 		ctx["dev_reset_link"] = self.request.session.get(self.SESSION_KEY)
 		ctx["debug"] = settings.DEBUG
 		return ctx
-
-# Create your views here.

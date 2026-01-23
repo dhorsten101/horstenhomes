@@ -13,6 +13,7 @@ class Tag(models.Model):
 	uid = models.UUIDField(default=uuid.uuid4, editable=False, db_index=True, unique=True)
 	name = models.CharField(max_length=64, db_index=True)
 	color = models.CharField(max_length=16, blank=True)
+	tags = models.JSONField(default=list, blank=True)
 	created_at = models.DateTimeField(default=timezone.now, db_index=True)
 	updated_at = models.DateTimeField(auto_now=True)
 
@@ -34,7 +35,9 @@ class TaggedItem(models.Model):
 	object_id = models.CharField(max_length=64, db_index=True)
 	content_object: Any = GenericForeignKey("content_type", "object_id")
 
+	tags = models.JSONField(default=list, blank=True)
 	created_at = models.DateTimeField(default=timezone.now, db_index=True)
+	updated_at = models.DateTimeField(auto_now=True)
 
 	class Meta:
 		indexes = [
@@ -57,6 +60,7 @@ class Note(models.Model):
 	content_object: Any = GenericForeignKey("content_type", "object_id")
 
 	body = models.TextField()
+	tags = models.JSONField(default=list, blank=True)
 
 	actor_user_id = models.CharField(max_length=64, blank=True, db_index=True)
 	actor_email = models.CharField(max_length=254, blank=True, db_index=True)
@@ -81,6 +85,7 @@ class ActivityEvent(models.Model):
 	verb = models.CharField(max_length=64, db_index=True)
 	message = models.CharField(max_length=500, blank=True)
 	metadata = models.JSONField(default=dict, blank=True)
+	tags = models.JSONField(default=list, blank=True)
 
 	content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
 	object_id = models.CharField(max_length=64, db_index=True)
@@ -91,6 +96,7 @@ class ActivityEvent(models.Model):
 	request_id = models.CharField(max_length=64, blank=True, db_index=True)
 
 	created_at = models.DateTimeField(default=timezone.now, db_index=True)
+	updated_at = models.DateTimeField(auto_now=True)
 
 	class Meta:
 		ordering = ["-created_at"]

@@ -16,6 +16,7 @@ class TimeStampedUUIDModel(models.Model):
 	"""
 
 	uid = models.UUIDField(default=uuid.uuid4, editable=False, db_index=True)
+	tags = models.JSONField(default=list, blank=True)
 	created_at = models.DateTimeField(default=timezone.now, db_index=True)
 	updated_at = models.DateTimeField(auto_now=True)
 

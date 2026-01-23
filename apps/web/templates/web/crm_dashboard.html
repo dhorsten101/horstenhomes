@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}CRM{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="mb-3">
+    <h1 class="h3 mb-0">CRM</h1>
+    <div class="text-muted small">Portfolio → Property → Unit → Lease</div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h5">Portfolios</h2>
+          <p class="text-muted small mb-3">Group properties by owner/investment.</p>
+          <a class="btn btn-primary" href="{% url 'portfolio:list' %}">Open</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h5">Properties</h2>
+          <p class="text-muted small mb-3">Manage properties and their units.</p>
+          <a class="btn btn-primary" href="{% url 'properties:property_list' %}">Open</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h5">Units</h2>
+          <p class="text-muted small mb-3">All units across properties.</p>
+          <a class="btn btn-primary" href="{% url 'properties:unit_list' %}">Open</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h5">Leases</h2>
+          <p class="text-muted small mb-3">Tenancies and agreements.</p>
+          <a class="btn btn-primary" href="{% url 'leases:list' %}">Open</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h5">Contacts</h2>
+          <p class="text-muted small mb-3">Owners, tenants, vendors.</p>
+          <a class="btn btn-primary" href="{% url 'contacts:list' %}">Open</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h5">Addresses</h2>
+          <p class="text-muted small mb-3">Reusable address records.</p>
+          <a class="btn btn-primary" href="{% url 'addresses:list' %}">Open</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

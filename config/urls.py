@@ -13,6 +13,13 @@ urlpatterns = [
     
     # Tenant UI (tenant schema)
     path("", include("apps.web.urls")),
+
+    # Tenant CRM (tenant schema only, enforced in views via tenant checks)
+    path("crm/addresses/", include(("apps.addresses.urls", "addresses"), namespace="addresses")),
+    path("crm/contacts/", include(("apps.contacts.urls", "contacts"), namespace="contacts")),
+    path("crm/portfolios/", include(("apps.portfolio.urls", "portfolio"), namespace="portfolio")),
+    path("crm/properties/", include(("apps.properties.urls", "properties"), namespace="properties")),
+    path("crm/leases/", include(("apps.leases.urls", "leases"), namespace="leases")),
     
     path("", include("apps.audits.urls")),
     

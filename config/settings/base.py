@@ -1,5 +1,7 @@
-from pathlib import Path
 import os
+
+from pathlib import Path
+
 from dotenv import load_dotenv
 
 # -------------------------------------------------
@@ -25,40 +27,46 @@ ALLOWED_HOSTS = [
 
 SHARED_APPS = (
 	"django_tenants",
-	
-	# Public schema needs these if you want /admin/ on public
+
+	# Django internals needed on the public schema
+	"django.contrib.contenttypes",
+	"django.contrib.messages",
+	"django.contrib.staticfiles",
+
+	# Optional: only if you want `/admin/` on public schema
+	"django.contrib.admin",
+	"django.contrib.auth",
+	"django.contrib.sessions",
+
+	# Cross-cutting (shared)
+	"apps.audits.apps.AuditsConfig",
+	"apps.logs.apps.LogsConfig",
+	"apps.activity.apps.ActivityConfig",
+
+	# Public control-plane apps (only these should live in public)
+	"apps.tenancy",  # Tenant + Domain
+	"apps.onboarding",  # TenantRequest intake
+	"apps.marketing",  # pricing/landing pages
+
+	# Platform UI (public schema only; views enforce this)
+	"apps.platform",
+)
+
+TENANT_APPS = (
+	# Standard Django tenant apps
 	"django.contrib.admin",
 	"django.contrib.auth",
 	"django.contrib.contenttypes",
 	"django.contrib.sessions",
 	"django.contrib.messages",
 	"django.contrib.staticfiles",
-	"apps.audits.apps.AuditsConfig",
-	
-	
-	# Public (control-plane) schema
-	"apps.tenancy",
-	"apps.core",
-	"apps.accounts",
-	"apps.addresses",
-	"apps.contacts",
-	"apps.onboarding",
-	"apps.marketing",
-	"apps.platform",
-	"apps.logs.apps.LogsConfig",
-	"apps.activity",
-)
 
-TENANT_APPS = (
-	"django.contrib.admin",
-	"django.contrib.auth",
-	"django.contrib.contenttypes",
-	"django.contrib.sessions",
-	"django.contrib.messages",
+	# Cross-cutting
 	"apps.audits.apps.AuditsConfig",
-	
-	
-	# Tenant-local apps
+	"apps.logs.apps.LogsConfig",
+	"apps.activity.apps.ActivityConfig",
+
+	# Tenant business/domain apps
 	"apps.core",
 	"apps.accounts",
 	"apps.addresses",
@@ -67,8 +75,6 @@ TENANT_APPS = (
 	"apps.properties",
 	"apps.leases",
 	"apps.web",
-	"apps.logs.apps.LogsConfig",
-	"apps.activity",
 )
 
 
