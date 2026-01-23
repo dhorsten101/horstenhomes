@@ -1,6 +1,9 @@
 from django.core.validators import RegexValidator
 from django.db import models
 from django_tenants.models import TenantMixin, DomainMixin
+from django.contrib.contenttypes.fields import GenericRelation
+
+from apps.core.models import TimeStampedUUIDModel
 
 class TenantStatus(models.TextChoices):
 	PENDING = "pending", "Pending"
@@ -16,7 +19,7 @@ slug_validator = RegexValidator(
 )
 
 
-class Tenant(TenantMixin):
+class Tenant(TimeStampedUUIDModel, TenantMixin):
 	"""
 	Stored in PUBLIC schema. Each row represents a tenant and owns a DB schema.
 	"""
@@ -29,11 +32,13 @@ class Tenant(TenantMixin):
 		default=TenantStatus.PENDING,
 		db_index=True,
 	)
-	
-	created_at = models.DateTimeField(auto_now_add=True)
 
 	# django-tenants will create the schema automatically when saving the tenant
 	auto_create_schema = True
+
+	tag_items = GenericRelation("activity.TaggedItem", content_type_field="content_type", object_id_field="object_id")
+	note_items = GenericRelation("activity.Note", content_type_field="content_type", object_id_field="object_id")
+	activity_events = GenericRelation("activity.ActivityEvent", content_type_field="content_type", object_id_field="object_id")
 
 
 	def save(self, *args, **kwargs):
@@ -49,8 +54,10 @@ class Tenant(TenantMixin):
 		return f"{self.name} ({self.schema_name})"
 
 
-class Domain(DomainMixin):
+class Domain(TimeStampedUUIDModel, DomainMixin):
 	"""
 	Stored in PUBLIC schema. Maps hostnames to tenants.
 	"""
-	pass
+	tag_items = GenericRelation("activity.TaggedItem", content_type_field="content_type", object_id_field="object_id")
+	note_items = GenericRelation("activity.Note", content_type_field="content_type", object_id_field="object_id")
+	activity_events = GenericRelation("activity.ActivityEvent", content_type_field="content_type", object_id_field="object_id")

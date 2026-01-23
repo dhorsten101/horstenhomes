@@ -1,4 +1,7 @@
 from django.db import models
+from django.contrib.contenttypes.fields import GenericRelation
+
+from apps.core.models import TimeStampedUUIDModel
 
 
 class TenantRequestStatus(models.TextChoices):
@@ -9,7 +12,7 @@ class TenantRequestStatus(models.TextChoices):
 	REJECTED = "rejected", "Rejected"
 
 
-class TenantRequest(models.Model):
+class TenantRequest(TimeStampedUUIDModel):
 	company_name = models.CharField(max_length=200)
 	desired_slug = models.SlugField(blank=True)
 	
@@ -22,6 +25,10 @@ class TenantRequest(models.Model):
 	admin_email = models.EmailField(blank=True)
 	
 	notes = models.TextField(blank=True)
+
+	tag_items = GenericRelation("activity.TaggedItem", content_type_field="content_type", object_id_field="object_id")
+	note_items = GenericRelation("activity.Note", content_type_field="content_type", object_id_field="object_id")
+	activity_events = GenericRelation("activity.ActivityEvent", content_type_field="content_type", object_id_field="object_id")
 	
 	status = models.CharField(
 		max_length=20,
@@ -31,9 +38,6 @@ class TenantRequest(models.Model):
 	)
 	
 	converted_tenant_schema = models.CharField(max_length=63, blank=True)
-	
-	created_at = models.DateTimeField(auto_now_add=True)
-	updated_at = models.DateTimeField(auto_now=True)
 	
 	def __str__(self):
 		return f"{self.company_name} ({self.status})"

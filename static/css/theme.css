@@ -1,13 +1,57 @@
-/* static/css/theme.css */
+:root{
+  /*
+    Horsten Homes palette (from logo):
+    - teal background
+    - hot pink accent
+    - bold blue type
+  */
 
-:root {
-    --bs-primary: #6f42c1;     /* replace with Horsten brand */
-    --bs-secondary: #6c757d;
-    --bs-success: #6f42c1;
-    --bs-danger: #dc3545;
-    --bs-warning: #ffc107;
-    --bs-info: #0dcaf0;
+  /* Base */
+  --bs-body-bg:#f3fffc;
+  --bs-body-color:#0b1220;
 
-    --bs-body-bg: #f8f9fa;
-    --bs-body-color: #212529;
+  /* Brand */
+  --bs-primary:#4a67ff;      --bs-primary-rgb:74,103,255;    /* logo blue */
+  --bs-secondary:#45cbb7;    --bs-secondary-rgb:69,203,183;  /* logo teal */
+  --bs-danger:#ff5ac8;       --bs-danger-rgb:255,90,200;     /* logo pink (accent) */
+
+  /* Supporting */
+  --bs-success:#20b486;      --bs-success-rgb:32,180,134;
+  --bs-warning:#f5b942;      --bs-warning-rgb:245,185,66;
+  --bs-info:#2a9df4;         --bs-info-rgb:42,157,244;
+
+  /* Make bg-dark match the teal brand (navbar uses bg-dark) */
+  --bs-dark:#44cbb7;
+  --bs-dark-rgb:69,203,183;
+
+  /* Links */
+  --bs-link-color:#4a67ff;
+  --bs-link-hover-color:#2f46ff;
+
+  /* Borders + surfaces */
+  --bs-border-color:#cfeee8;
+  --bs-border-color-translucent:rgba(69,203,183,.25);
+
+  --bs-card-bg:#ffffff;
+  --bs-card-border-color:#cfeee8;
+
+  /* Inputs */
+  --bs-input-bg:#ffffff;
+  --bs-input-border-color:#cfeee8;
+  --bs-input-color:#0b1220;
+  --bs-input-focus-border-color:#4a67ff;
+
+  /* Tables */
+  --bs-table-striped-bg:rgba(69,203,183,.08);
+  --bs-table-hover-bg:rgba(69,203,183,.14);
+}
+
+/* Keep navbar text readable on teal background */
+.navbar.bg-dark .nav-link,
+.navbar.bg-dark .navbar-brand,
+.navbar.bg-dark .navbar-text{
+  color:#08101f !important;
+}
+.navbar.bg-dark .nav-link:hover{
+  color:#4a67ff !important;
 }

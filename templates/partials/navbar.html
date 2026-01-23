@@ -1,7 +1,8 @@
+{% load static %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid">
     <a class="navbar-brand" href="/">
-      Horsten Homes
+      <img src="{% static 'img/logo.png' %}" alt="Horsten Homes" height="34" class="d-inline-block align-text-top">
     </a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -13,9 +14,7 @@
     <div class="collapse navbar-collapse" id="mainNavbar">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         {% if user.is_authenticated %}
-        <li class="nav-item">
-          <a class="nav-link" href="/">Dashboard</a>
-        </li>
+
         {% if user.is_staff %}
         <li class="nav-item">
           <a class="nav-link" href="/platform/">Platform</a>
@@ -32,11 +31,18 @@
         <li class="nav-item">
           <a class="nav-link" href="/platform/metrics/">Metrics</a>
         </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/admin/">Admin</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/pricing/">Pricing</a>
+          </li>
         {% endif %}
         {% endif %}
       </ul>
 
       <ul class="navbar-nav ms-auto">
+          
         {% if user.is_authenticated %}
         <li class="nav-item">
             <span class="navbar-text me-3">
@@ -46,8 +52,9 @@
         <li class="nav-item">
           <form method="post" action="/logout/" class="d-inline">
             {% csrf_token %}
-            <button type="submit" class="nav-link btn btn-link p-0" style="text-decoration: none;">
-              Logout
+            <button type="submit" class="nav-link btn btn-link p-0 d-flex align-items-center" style="text-decoration: none;" aria-label="Log out">
+              <i class="bi bi-box-arrow-right fs-5" aria-hidden="true"></i>
+              <span class="visually-hidden">Log out</span>
             </button>
           </form>
         </li>

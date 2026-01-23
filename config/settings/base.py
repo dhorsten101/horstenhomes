@@ -38,11 +38,13 @@ SHARED_APPS = (
 	
 	# Public (control-plane) schema
 	"apps.tenancy",
+	"apps.core",
 	"apps.accounts",
 	"apps.onboarding",
 	"apps.marketing",
 	"apps.platform",
 	"apps.logs.apps.LogsConfig",
+	"apps.activity",
 )
 
 TENANT_APPS = (
@@ -55,9 +57,11 @@ TENANT_APPS = (
 	
 	
 	# Tenant-local apps
+	"apps.core",
 	"apps.accounts",
 	"apps.web",
 	"apps.logs.apps.LogsConfig",
+	"apps.activity",
 )
 
 

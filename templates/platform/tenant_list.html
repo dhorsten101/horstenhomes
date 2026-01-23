@@ -48,9 +48,9 @@
                 </form>
               {% endif %}
               <form method="post" action="{% url 'platform:tenant_delete' t.id %}" class="d-inline ms-1"
-                    onsubmit="return confirm('Delete tenant record? (Schema will NOT be dropped)');">
+                    >
                 {% csrf_token %}
-                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete tenant record? (Schema will NOT be dropped)">Delete</button>
               </form>
             {% else %}
               <span class="text-muted small">—</span>

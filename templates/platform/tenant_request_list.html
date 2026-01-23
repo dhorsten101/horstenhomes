@@ -47,9 +47,9 @@
                 <button class="btn btn-sm btn-outline-warning" type="submit">Reject</button>
               </form>
               <form method="post" action="{% url 'platform:tenant_request_delete' tr.id %}" class="d-inline ms-1"
-                    onsubmit="return confirm('Delete this tenant request?');">
+                    >
                 {% csrf_token %}
-                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete this tenant request?">Delete</button>
               </form>
             {% else %}
               <span class="text-muted small">—</span>

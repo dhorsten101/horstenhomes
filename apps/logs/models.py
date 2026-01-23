@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import uuid
+
 from django.db import models
 from django.utils import timezone
 
@@ -19,6 +21,7 @@ class LogEntry(models.Model):
 	  - tenant schemas: tenant runtime logs
 	"""
 
+	uid = models.UUIDField(default=uuid.uuid4, editable=False, db_index=True, unique=True)
 	created_at = models.DateTimeField(default=timezone.now, db_index=True)
 	level = models.CharField(max_length=10, choices=LogLevel.choices, db_index=True)
 	logger = models.CharField(max_length=200, db_index=True)
