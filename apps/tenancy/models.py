@@ -39,6 +39,9 @@ class Tenant(TimeStampedUUIDModel, TenantMixin):
 	tag_items = GenericRelation("activity.TaggedItem", content_type_field="content_type", object_id_field="object_id")
 	note_items = GenericRelation("activity.Note", content_type_field="content_type", object_id_field="object_id")
 	activity_events = GenericRelation("activity.ActivityEvent", content_type_field="content_type", object_id_field="object_id")
+	
+	external_id = models.CharField(max_length=120, blank=True, db_index=True)
+	source = models.CharField(max_length=80, blank=True)  # "manual", "csv", "api:xyz"
 
 
 	def save(self, *args, **kwargs):

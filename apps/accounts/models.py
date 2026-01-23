@@ -17,6 +17,13 @@ class User(TimeStampedUUIDModel, AbstractBaseUser, PermissionsMixin):
 	note_items = GenericRelation("activity.Note", content_type_field="content_type", object_id_field="object_id")
 	activity_events = GenericRelation("activity.ActivityEvent", content_type_field="content_type", object_id_field="object_id")
 	
+	contact = models.OneToOneField(
+		"contacts.Contact",
+		null=True, blank=True,
+		on_delete=models.SET_NULL,
+		related_name="user",
+	)
+	
 	objects = UserManager()
 	
 	USERNAME_FIELD = "email"

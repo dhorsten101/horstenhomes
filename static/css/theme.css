@@ -29,21 +29,21 @@
   --bs-link-hover-color:#2f46ff;
 
   /* Borders + surfaces */
-  --bs-border-color:#cfeee8;
-  --bs-border-color-translucent:rgba(69,203,183,.25);
+  --bs-border-color: #ffffff;
+  --bs-border-color-translucent: rgb(255, 255, 255);
 
   --bs-card-bg:#ffffff;
-  --bs-card-border-color:#cfeee8;
+  --bs-card-border-color: #ffffff;
 
   /* Inputs */
   --bs-input-bg:#ffffff;
-  --bs-input-border-color:#cfeee8;
+  --bs-input-border-color: #ffffff;
   --bs-input-color:#0b1220;
   --bs-input-focus-border-color:#4a67ff;
 
   /* Tables */
-  --bs-table-striped-bg:rgba(69,203,183,.08);
-  --bs-table-hover-bg:rgba(69,203,183,.14);
+  --bs-table-striped-bg: rgb(255, 255, 255);
+  --bs-table-hover-bg: rgba(9, 236, 200, 0.14);
 }
 
 /* Keep navbar text readable on teal background */
