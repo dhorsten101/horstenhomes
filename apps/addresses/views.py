@@ -3,13 +3,12 @@ from __future__ import annotations
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
-from django.urls import reverse
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from apps.addresses.forms import AddressForm
 from apps.addresses.models import Address
-from apps.core.mixins import PostOnlyDeleteMixin, TenantSchemaRequiredMixin
+from apps.core.mixins import PostOnlyDeleteMixin, TenantSchemaRequiredMixin, WorkItemContextMixin
 
 
 class AddressListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView):
@@ -39,7 +38,7 @@ class AddressListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView):
 		return ctx
 
 
-class AddressDetailView(TenantSchemaRequiredMixin, LoginRequiredMixin, DetailView):
+class AddressDetailView(WorkItemContextMixin, TenantSchemaRequiredMixin, LoginRequiredMixin, DetailView):
 	model = Address
 	template_name = "addresses/address_detail.html"
 	context_object_name = "address"

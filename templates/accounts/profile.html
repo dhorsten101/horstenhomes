@@ -11,16 +11,24 @@
       <div class="card-body">
         <div class="mb-2"><span class="text-muted">Email:</span> <strong>{{ user.email }}</strong></div>
         <div class="mb-3"><span class="text-muted">Tenant:</span> <strong>{{ request.tenant.schema_name }}</strong></div>
+        <div class="mb-3">
+          <span class="text-muted">Role:</span>
+          {% if user.is_superuser %}
+            <span class="badge bg-primary">Platform admin</span>
+          {% elif user.is_staff %}
+            <span class="badge bg-success">Tenant admin</span>
+          {% else %}
+            <span class="badge bg-secondary">User</span>
+          {% endif %}
+        </div>
 
         <div class="d-flex gap-2 flex-wrap">
-          <a class="btn btn-primary" href="/admin/">Admin console</a>
+          {% if request.tenant and request.tenant.schema_name == "public" and user.is_superuser %}
+            <a class="btn btn-primary" href="/admin/">Admin console</a>
+          {% endif %}
         </div>
       </div>
     </div>
-
-    <p class="text-muted mt-3 mb-0">
-      User management is done via the tenant admin console for now.
-    </p>
   </div>
 </div>
 {% endblock %}

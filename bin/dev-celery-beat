@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+NETWORK="${NETWORK:-horstenhomes-net}"
+WEB_IMAGE="${WEB_IMAGE:-horstenhomes-dev:latest}"
+NAME="${CELERY_BEAT_NAME:-hh-celery-beat}"
+ENV_FILE="${ENV_FILE:-.env.dev}"
+
+echo "▶ Starting Celery beat: ${NAME}"
+docker rm -f "${NAME}" >/dev/null 2>&1 || true
+docker run -d --name "${NAME}" --network "${NETWORK}" \
+  --env-file "${ENV_FILE}" \
+  -e PYTHONPATH=/app \
+  -v "$(pwd)":/app \
+  "${WEB_IMAGE}" \
+  celery -A config beat -l info >/dev/null
+
+echo "✅ Beat up. Logs: docker logs -f ${NAME}"
+

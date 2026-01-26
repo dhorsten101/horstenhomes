@@ -1,0 +1,28 @@
+{% load money_extras %}
+{# Reusable pricing cards component. Expects `plans` in context. #}
+<div class="row g-4 justify-content-center">
+  {% for p in plans %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm {% if forloop.first %}border-primary{% endif %}">
+        <div class="card-body p-4">
+          <h3 class="h5 fw-bold">{{ p.name }}</h3>
+          {% if p.description %}<p class="text-muted">{{ p.description }}</p>{% endif %}
+
+          <div class="display-6 fw-bold mb-3">
+            {{ p.unit_price|zar }}
+            <span class="fs-6 text-muted">/ month</span>
+          </div>
+
+          <a href="/signup/?plan={{ p.code }}" class="btn {% if forloop.first %}btn-primary{% else %}btn-outline-primary{% endif %} w-100">
+            Get Going
+          </a>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <div class="col-12">
+      <div class="alert alert-warning mb-0">No active plans configured yet.</div>
+    </div>
+  {% endfor %}
+</div>
+

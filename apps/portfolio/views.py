@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count, Q
-from django.urls import reverse
-from django.urls import reverse_lazy
+from django.db.models import Count, DecimalField, F, OuterRef, Q, Subquery, Sum, Value
+from django.db.models.functions import Coalesce
+from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from apps.core.mixins import PostOnlyDeleteMixin, TenantSchemaRequiredMixin
+from apps.core.mixins import PostOnlyDeleteMixin, TenantSchemaRequiredMixin, WorkItemContextMixin
 from apps.portfolio.forms import PortfolioForm
 from apps.portfolio.models import Portfolio
+from apps.properties.models import Property, Unit
 
 
 class PortfolioListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView):
@@ -19,9 +22,40 @@ class PortfolioListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView)
 	paginate_by = 25
 
 	def get_queryset(self):
+		site_value_subquery = (
+			Property.objects.filter(portfolio_id=OuterRef("pk"))
+			.values("portfolio_id")
+			.annotate(
+				total=Coalesce(
+					Sum("purchase_price"),
+					Value(Decimal("0.00")),
+					output_field=DecimalField(max_digits=14, decimal_places=2),
+				)
+			)
+			.values("total")[:1]
+		)
+
+		unit_value_subquery = (
+			Unit.objects.filter(property__portfolio_id=OuterRef("pk"))
+			.values("property__portfolio_id")
+			.annotate(
+				total=Coalesce(
+					Sum("purchase_price"),
+					Value(Decimal("0.00")),
+					output_field=DecimalField(max_digits=14, decimal_places=2),
+				)
+			)
+			.values("total")[:1]
+		)
+
 		qs = (
 			Portfolio.objects.select_related("owner_contact")
 			.annotate(property_count=Count("properties"))
+			.annotate(site_value=Subquery(site_value_subquery))
+			.annotate(unit_value=Subquery(unit_value_subquery))
+			.annotate(
+				total_asset_value=Coalesce("site_value", Value(Decimal("0.00"))) + Coalesce("unit_value", Value(Decimal("0.00")))
+			)
 			.order_by("-updated_at")
 		)
 		q = (self.request.GET.get("q") or "").strip()
@@ -35,10 +69,80 @@ class PortfolioListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView)
 		return ctx
 
 
-class PortfolioDetailView(TenantSchemaRequiredMixin, LoginRequiredMixin, DetailView):
+class PortfolioDetailView(WorkItemContextMixin, TenantSchemaRequiredMixin, LoginRequiredMixin, DetailView):
 	model = Portfolio
 	template_name = "portfolio/portfolio_detail.html"
 	context_object_name = "portfolio"
+
+	def get_queryset(self):
+		site_value_subquery = (
+			Property.objects.filter(portfolio_id=OuterRef("pk"))
+			.values("portfolio_id")
+			.annotate(
+				total=Coalesce(
+					Sum("purchase_price"),
+					Value(Decimal("0.00")),
+					output_field=DecimalField(max_digits=14, decimal_places=2),
+				)
+			)
+			.values("total")[:1]
+		)
+
+		unit_value_subquery = (
+			Unit.objects.filter(property__portfolio_id=OuterRef("pk"))
+			.values("property__portfolio_id")
+			.annotate(
+				total=Coalesce(
+					Sum("purchase_price"),
+					Value(Decimal("0.00")),
+					output_field=DecimalField(max_digits=14, decimal_places=2),
+				)
+			)
+			.values("total")[:1]
+		)
+
+		return (
+			super()
+			.get_queryset()
+			.select_related("owner_contact")
+			.annotate(site_value=Subquery(site_value_subquery))
+			.annotate(unit_value=Subquery(unit_value_subquery))
+			.annotate(
+				total_asset_value=Coalesce("site_value", Value(Decimal("0.00"))) + Coalesce("unit_value", Value(Decimal("0.00")))
+			)
+		)
+
+	def get_context_data(self, **kwargs):
+		ctx = super().get_context_data(**kwargs)
+		p = self.object
+
+		# Properties in this portfolio (include rollups)
+		ctx["properties"] = (
+			Property.objects.filter(portfolio=p)
+			.select_related("portfolio", "address")
+			.annotate(
+				units_purchase_total=Coalesce(
+					Sum("units__purchase_price"),
+					Value(Decimal("0.00")),
+					output_field=DecimalField(max_digits=14, decimal_places=2),
+				)
+			)
+			.annotate(
+				total_asset_value=Coalesce(
+					F("purchase_price"),
+					Value(Decimal("0.00")),
+					output_field=DecimalField(max_digits=14, decimal_places=2),
+				)
+				+ Coalesce(
+					F("units_purchase_total"),
+					Value(Decimal("0.00")),
+					output_field=DecimalField(max_digits=14, decimal_places=2),
+				)
+			)
+			.order_by("-updated_at")
+		)
+
+		return ctx
 
 
 class PortfolioCreateView(TenantSchemaRequiredMixin, LoginRequiredMixin, CreateView):

@@ -3,13 +3,12 @@ from __future__ import annotations
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
-from django.urls import reverse
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from apps.contacts.forms import ContactForm
 from apps.contacts.models import Contact
-from apps.core.mixins import PostOnlyDeleteMixin, TenantSchemaRequiredMixin
+from apps.core.mixins import PostOnlyDeleteMixin, TenantSchemaRequiredMixin, WorkItemContextMixin
 
 
 class ContactListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView):
@@ -33,7 +32,7 @@ class ContactListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView):
 		return ctx
 
 
-class ContactDetailView(TenantSchemaRequiredMixin, LoginRequiredMixin, DetailView):
+class ContactDetailView(WorkItemContextMixin, TenantSchemaRequiredMixin, LoginRequiredMixin, DetailView):
 	model = Contact
 	template_name = "contacts/contact_detail.html"
 	context_object_name = "contact"

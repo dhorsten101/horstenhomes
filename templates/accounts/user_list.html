@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Users | Accounts{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h1 class="h4 mb-0">Users</h1>
+  <div class="btn-group btn-group-sm" role="group" aria-label="Page actions">
+    <a class="btn btn-sm btn-primary" href="{% url 'crm_dashboard' %}">Back</a>
+    <a class="btn btn-sm btn-success" href="{% url 'accounts:user_create' %}">Create user</a>
+  </div>
+</div>
+
+<form class="row g-2 mb-3 align-items-center" method="get" style="max-width: 720px;">
+  <div class="col-12 col-md-8">
+    <input class="form-control form-control-sm" name="q" placeholder="Search email…" value="{{ q }}">
+  </div>
+  <div class="col-12 col-md-auto">
+    <div class="btn-group btn-group-sm" role="group" aria-label="Search actions">
+      <button class="btn btn-outline-secondary" type="submit">Search</button>
+      <a class="btn btn-outline-danger" href="{% url 'accounts:user_list' %}">Clear</a>
+    </div>
+  </div>
+</form>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} mb-2" role="alert">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<div class="table-responsive">
+  <table class="table table-sm align-middle">
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Staff</th>
+        <th>Active</th>
+        <th>Last login</th>
+        <th>Created</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+        <tr>
+          <td>{{ u.email }}</td>
+          <td>{% if u.is_staff %}<span class="badge bg-success">yes</span>{% else %}<span class="badge bg-danger">no</span>{% endif %}</td>
+          <td>{% if u.is_active %}<span class="badge bg-success">yes</span>{% else %}<span class="badge bg-danger">no</span>{% endif %}</td>
+          <td class="small text-muted">{% if u.last_login %}{{ u.last_login }}{% else %}—{% endif %}</td>
+          <td class="small text-muted">{{ u.created_at }}</td>
+          <td class="text-end">
+            <div class="btn-group btn-group-sm" role="group" aria-label="Row actions">
+              <a class="btn btn-outline-warning" href="{% url 'accounts:user_edit' u.id %}">Edit</a>
+              <form method="post" action="{% url 'accounts:user_set_password_link' u.id %}">
+                {% csrf_token %}
+                <button class="btn btn-outline-secondary" type="submit" data-confirm="Generate a set-password link for this user?">
+                  Set password
+                </button>
+              </form>
+              <form method="post" action="{% url 'accounts:user_toggle_active' u.id %}">
+                {% csrf_token %}
+                <button class="btn btn-outline-warning" type="submit" data-confirm="Toggle active status for this user?">
+                  {% if u.is_active %}Deactivate{% else %}Activate{% endif %}
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" class="text-muted">No users.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if is_paginated %}
+  <nav class="mt-3">
+    <ul class="pagination pagination-sm">
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?q={{ q }}&page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+      {% endif %}
+      <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?q={{ q }}&page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">Next</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}
+{% endblock %}
+

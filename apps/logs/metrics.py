@@ -21,7 +21,7 @@ class SystemMetrics:
 def _read_meminfo() -> dict[str, int]:
 	out: dict[str, int] = {}
 	try:
-		with open("/proc/meminfo", "r", encoding="utf-8") as f:
+		with open("/proc/meminfo", encoding="utf-8") as f:
 			for line in f:
 				parts = line.split()
 				if len(parts) >= 2 and parts[0].endswith(":"):
@@ -34,7 +34,7 @@ def _read_meminfo() -> dict[str, int]:
 
 def _read_rss_kb() -> int | None:
 	try:
-		with open("/proc/self/status", "r", encoding="utf-8") as f:
+		with open("/proc/self/status", encoding="utf-8") as f:
 			for line in f:
 				if line.startswith("VmRSS:"):
 					return int(line.split()[1])

@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Q
+from django.db.models import DecimalField, F, Q, Sum, Value
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from apps.core.mixins import PostOnlyDeleteMixin, TenantSchemaRequiredMixin
+from apps.core.mixins import PostOnlyDeleteMixin, TenantSchemaRequiredMixin, WorkItemContextMixin
 from apps.properties.forms import PropertyForm, UnitForm
 from apps.properties.models import Property, Unit
 
@@ -19,7 +22,29 @@ class PropertyListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView):
 	paginate_by = 25
 
 	def get_queryset(self):
-		qs = Property.objects.select_related("portfolio", "address").all().order_by("-updated_at")
+		qs = (
+			Property.objects.select_related("portfolio", "address")
+			.annotate(
+				units_purchase_total=Coalesce(
+					Sum("units__purchase_price"),
+					Value(Decimal("0.00")),
+					output_field=DecimalField(max_digits=14, decimal_places=2),
+				)
+			)
+			.annotate(
+				total_asset_value=Coalesce(
+					F("purchase_price"),
+					Value(Decimal("0.00")),
+					output_field=DecimalField(max_digits=14, decimal_places=2),
+				)
+				+ Coalesce(
+					F("units_purchase_total"),
+					Value(Decimal("0.00")),
+					output_field=DecimalField(max_digits=14, decimal_places=2),
+				)
+			)
+			.order_by("-updated_at")
+		)
 		q = (self.request.GET.get("q") or "").strip()
 		if q:
 			qs = qs.filter(Q(name__icontains=q) | Q(external_id__icontains=q))
@@ -31,10 +56,36 @@ class PropertyListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView):
 		return ctx
 
 
-class PropertyDetailView(TenantSchemaRequiredMixin, LoginRequiredMixin, DetailView):
+class PropertyDetailView(WorkItemContextMixin, TenantSchemaRequiredMixin, LoginRequiredMixin, DetailView):
 	model = Property
 	template_name = "properties/property_detail.html"
 	context_object_name = "property"
+
+	def get_queryset(self):
+		return (
+			super()
+			.get_queryset()
+			.select_related("portfolio", "address")
+			.annotate(
+				units_purchase_total=Coalesce(
+					Sum("units__purchase_price"),
+					Value(Decimal("0.00")),
+					output_field=DecimalField(max_digits=14, decimal_places=2),
+				)
+			)
+			.annotate(
+				total_asset_value=Coalesce(
+					F("purchase_price"),
+					Value(Decimal("0.00")),
+					output_field=DecimalField(max_digits=14, decimal_places=2),
+				)
+				+ Coalesce(
+					F("units_purchase_total"),
+					Value(Decimal("0.00")),
+					output_field=DecimalField(max_digits=14, decimal_places=2),
+				)
+			)
+		)
 
 	def get_context_data(self, **kwargs):
 		ctx = super().get_context_data(**kwargs)
@@ -98,7 +149,7 @@ class UnitListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView):
 		return ctx
 
 
-class UnitDetailView(TenantSchemaRequiredMixin, LoginRequiredMixin, DetailView):
+class UnitDetailView(WorkItemContextMixin, TenantSchemaRequiredMixin, LoginRequiredMixin, DetailView):
 	model = Unit
 	template_name = "properties/unit_detail.html"
 	context_object_name = "unit"
@@ -108,6 +159,11 @@ class UnitCreateView(TenantSchemaRequiredMixin, LoginRequiredMixin, CreateView):
 	model = Unit
 	form_class = UnitForm
 	template_name = "properties/unit_form.html"
+
+	def get_form_kwargs(self):
+		kwargs = super().get_form_kwargs()
+		kwargs["request"] = self.request
+		return kwargs
 
 	def form_valid(self, form):
 		resp = super().form_valid(form)
@@ -139,6 +195,11 @@ class UnitUpdateView(TenantSchemaRequiredMixin, LoginRequiredMixin, UpdateView):
 	model = Unit
 	form_class = UnitForm
 	template_name = "properties/unit_form.html"
+
+	def get_form_kwargs(self):
+		kwargs = super().get_form_kwargs()
+		kwargs["request"] = self.request
+		return kwargs
 
 	def form_valid(self, form):
 		resp = super().form_valid(form)

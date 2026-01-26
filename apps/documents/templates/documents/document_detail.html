@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Document{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h1 class="h4 mb-0">{{ document.title|default:"Document" }}</h1>
+      <div class="text-muted small">Uploaded {{ document.created_at|date:"Y-m-d H:i" }}</div>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-sm btn-outline-primary" href="{% url 'documents:download' document.pk %}">Download</a>
+      <a class="btn btn-sm btn-outline-warning" href="{% url 'documents:edit' document.pk %}">Edit</a>
+      <form method="post" action="{% url 'documents:delete' document.pk %}">
+        {% csrf_token %}
+        <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete this document?">Delete</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <dl class="row mb-0">
+        <dt class="col-sm-3">Attached to</dt>
+        <dd class="col-sm-9 small text-muted">{{ document.content_type.app_label }}.{{ document.content_type.model }} #{{ document.object_id }}</dd>
+
+        <dt class="col-sm-3">Filename</dt>
+        <dd class="col-sm-9"><code>{{ document.file.name }}</code></dd>
+
+        <dt class="col-sm-3">Description</dt>
+        <dd class="col-sm-9">{{ document.description|default:"—" }}</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <a class="btn btn-primary" href="{% url 'documents:list' %}">Back to documents</a>
+  </div>
+</div>
+{% endblock %}
+

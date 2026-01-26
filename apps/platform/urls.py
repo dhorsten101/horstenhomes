@@ -6,6 +6,13 @@ app_name = "platform"
 
 urlpatterns = [
 	path("", views.dashboard_view, name="dashboard"),
+	path("tests/", views.tests_view, name="tests"),
+	path("db/", views.db_view, name="db"),
+	path("switch/", views.tenant_switch_view, name="tenant_switch"),
+	path("entitlements/", views.entitlements_dashboard_view, name="entitlements_dashboard"),
+	path("entitlements/plans/", views.plan_list_view, name="plan_list"),
+	path("entitlements/tenants/", views.tenant_plan_list_view, name="tenant_plan_list"),
+	path("entitlements/tenants/<int:tenant_id>/set/", views.tenant_plan_set_view, name="tenant_plan_set"),
 	path("tenant-requests/", views.tenant_request_list_view, name="tenant_request_list"),
 	path(
 		"tenant-requests/<int:pk>/approve-provision/",

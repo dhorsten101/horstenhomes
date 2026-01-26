@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Documents{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h4 mb-0">Documents</h1>
+    <a class="btn btn-sm btn-primary" href="{% url 'crm_dashboard' %}">Back</a>
+  </div>
+
+  <div class="card border-0">
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Attached to</th>
+            <th>Uploaded</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in documents %}
+            <tr>
+              <td>
+                <a class="text-decoration-none" href="{% url 'documents:detail' d.pk %}">
+                  {{ d.title|default:"(untitled)" }}
+                </a>
+              </td>
+              <td class="small text-muted">
+                {{ d.content_type.app_label }}.{{ d.content_type.model }} #{{ d.object_id }}
+              </td>
+              <td class="small text-muted">{{ d.created_at|date:"Y-m-d H:i" }}</td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'documents:download' d.pk %}">Download</a>
+                <a class="btn btn-sm btn-outline-warning ms-1" href="{% url 'documents:edit' d.pk %}">Edit</a>
+                <form method="post" action="{% url 'documents:delete' d.pk %}" class="d-inline ms-1">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete this document?">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="text-muted text-center py-4">No documents.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

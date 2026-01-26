@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Log in | Horsten Homes{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h1 class="h4 mb-2">Log in</h1>
+        <p class="text-muted mb-4">
+          Enter your <strong>tenant slug</strong> (e.g. <code>company2</code>) and we’ll take you to your login page.
+        </p>
+
+        {% if error %}
+          <div class="alert alert-danger" role="alert">{{ error }}</div>
+        {% endif %}
+
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ next }}">
+
+          <div class="mb-3">
+            <label class="form-label" for="tenant">
+              Tenant slug or domain <span class="text-danger" aria-hidden="true">*</span>
+            </label>
+            <input
+              class="form-control"
+              id="tenant"
+              name="tenant"
+              placeholder="company2  (or company2.horstenhomes.local)"
+              autocomplete="organization"
+              required
+            >
+            <div class="form-text">
+              Don’t know your slug? Use the link you were sent after signup/provisioning.
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="email">Email (optional)</label>
+            <input
+              class="form-control"
+              id="email"
+              name="email"
+              type="email"
+              value="{{ email }}"
+              placeholder="you@company.com"
+              autocomplete="email"
+            >
+            <div class="form-text">Used to prefill the “reset password” page.</div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" name="flow" value="reset" class="btn btn-primary">Set password</button>
+            <button type="submit" name="flow" value="login" class="btn btn-outline-primary">Continue to login</button>
+          </div>
+        </form>
+
+        <div class="mt-3 small text-muted">
+          If you’re a platform admin, use <a href="/admin/">Admin</a>.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
+from django.db import models
 
 from apps.core.models import TimeStampedUUIDModel
 
@@ -17,6 +17,8 @@ class TenantRequest(TimeStampedUUIDModel):
 	desired_slug = models.SlugField(blank=True)
 	
 	contact_name = models.CharField(max_length=120)
+	contact_first_name = models.CharField(max_length=120, blank=True)
+	contact_last_name = models.CharField(max_length=120, blank=True)
 	contact_email = models.EmailField()
 	contact_phone = models.CharField(max_length=40, blank=True)
 	
@@ -38,6 +40,17 @@ class TenantRequest(TimeStampedUUIDModel):
 	)
 	
 	converted_tenant_schema = models.CharField(max_length=63, blank=True)
+	requested_plan_code = models.SlugField(default="free", blank=True)
+
+	# Provisioning outputs (public schema only; used to give the requester a seamless next step)
+	provisioned_domain = models.CharField(max_length=255, blank=True)
+	reset_uidb64 = models.CharField(max_length=255, blank=True)
+	reset_token = models.CharField(max_length=255, blank=True)
+
+	class Meta:
+		indexes = [
+			models.Index(fields=["status", "created_at"]),
+		]
 	
 	def __str__(self):
 		return f"{self.company_name} ({self.status})"

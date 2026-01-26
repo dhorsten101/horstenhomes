@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load money_extras %}
 
 {% block title %}Properties{% endblock %}
 
@@ -9,23 +10,26 @@
       <h1 class="h3 mb-0">Properties</h1>
       <div class="text-muted small">Buildings / properties in your portfolios</div>
     </div>
-    <div class="d-flex gap-2">
+    <div class="btn-group" role="group" aria-label="Page actions">
+      <a class="btn btn-primary" href="{% url 'crm_dashboard' %}">Back</a>
       <a class="btn btn-outline-secondary" href="{% url 'properties:unit_list' %}">Units</a>
-      <a class="btn btn-primary" href="{% url 'properties:property_create' %}">New property</a>
+      <a class="btn btn-success" href="{% url 'properties:property_create' %}">New property</a>
     </div>
   </div>
 
-  <form class="row g-2 mb-3" method="get">
-    <div class="col-md-8">
+  <form class="row g-2 mb-3 align-items-center" method="get" style="max-width: 720px;">
+    <div class="col-12 col-md-8">
       <input class="form-control" name="q" value="{{ q }}" placeholder="Search name..." />
     </div>
-    <div class="col-md-4 d-flex gap-2">
-      <button class="btn btn-outline-secondary" type="submit">Search</button>
-      <a class="btn btn-outline-secondary" href="{% url 'properties:property_list' %}">Clear</a>
+    <div class="col-12 col-md-auto">
+      <div class="btn-group" role="group" aria-label="Search actions">
+        <button class="btn btn-outline-secondary" type="submit">Search</button>
+        <a class="btn btn-outline-danger" href="{% url 'properties:property_list' %}">Clear</a>
+      </div>
     </div>
   </form>
 
-  <div class="card">
+  <div class="card border-0">
     <div class="table-responsive">
       <table class="table table-striped mb-0 align-middle">
         <thead>
@@ -33,6 +37,9 @@
             <th>Name</th>
             <th>Portfolio</th>
             <th>Type</th>
+            <th>Purchase date</th>
+            <th>Purchase price</th>
+            <th>Total value</th>
             <th>Status</th>
             <th class="text-end">Actions</th>
           </tr>
@@ -43,6 +50,9 @@
             <td><a class="text-decoration-none" href="{% url 'properties:property_detail' p.pk %}">{{ p.name }}</a></td>
             <td><a href="{% url 'portfolio:detail' p.portfolio.pk %}">{{ p.portfolio.name }}</a></td>
             <td>{{ p.get_property_type_display }}</td>
+            <td class="small text-muted">{{ p.purchase_date|date:"Y-m-d"|default:"—" }}</td>
+            <td>{{ p.purchase_price|usd }}</td>
+            <td>{{ p.total_asset_value|usd }}</td>
             <td>
               {% if p.is_archived %}
                 <span class="badge text-bg-secondary">Archived</span>
@@ -51,17 +61,15 @@
               {% endif %}
             </td>
             <td class="text-end">
-              <a class="btn btn-sm btn-outline-secondary" href="{% url 'properties:property_update' p.pk %}">Edit</a>
-              <form method="post" action="{% url 'properties:property_delete' p.pk %}" class="d-inline">
+              <a class="btn btn-sm btn-outline-warning" href="{% url 'properties:property_update' p.pk %}">Edit</a>
+              <form method="post" action="{% url 'properties:property_delete' p.pk %}" class="d-inline ms-1">
                 {% csrf_token %}
-                <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete this property?">
-                  Delete
-                </button>
+                <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete this property?">Delete</button>
               </form>
             </td>
           </tr>
           {% empty %}
-          <tr><td colspan="5" class="text-center text-muted py-4">No properties yet.</td></tr>
+          <tr><td colspan="8" class="text-center text-muted py-4">No properties yet.</td></tr>
           {% endfor %}
         </tbody>
       </table>

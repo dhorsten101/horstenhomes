@@ -7,11 +7,11 @@
   */
 
   /* Base */
-  --bs-body-bg:#f3fffc;
-  --bs-body-color:#0b1220;
+  --bs-body-bg: #fdfdfd;
+  --bs-body-color: #4963e6;
 
   /* Brand */
-  --bs-primary:#4a67ff;      --bs-primary-rgb:74,103,255;    /* logo blue */
+  --bs-primary: #4963e6;      --bs-primary-rgb:74,103,255;    /* logo blue */
   --bs-secondary:#45cbb7;    --bs-secondary-rgb:69,203,183;  /* logo teal */
   --bs-danger:#ff5ac8;       --bs-danger-rgb:255,90,200;     /* logo pink (accent) */
 
@@ -29,11 +29,11 @@
   --bs-link-hover-color:#2f46ff;
 
   /* Borders + surfaces */
-  --bs-border-color: #ffffff;
-  --bs-border-color-translucent: rgb(255, 255, 255);
+  --bs-border-color: #757373;
+  --bs-border-color-translucent: rgb(117, 115, 115);
 
   --bs-card-bg:#ffffff;
-  --bs-card-border-color: #ffffff;
+  --bs-card-border-color: #0e0d0d;
 
   /* Inputs */
   --bs-input-bg:#ffffff;
@@ -54,4 +54,190 @@
 }
 .navbar.bg-dark .nav-link:hover{
   color:#4a67ff !important;
+}
+
+/* ------------------------------------------------------------------
+   Buttons: map Bootstrap variants to your theme CSS variables
+
+   Bootstrap 5.3 button variants are compiled with fixed colors, so changing
+   `--bs-primary` alone won't automatically recolor `.btn-primary`.
+   These overrides bind each `.btn-*` variant to your `--bs-*` palette.
+------------------------------------------------------------------- */
+
+/* Solid variants */
+.btn-primary{
+  --bs-btn-bg: var(--bs-primary);
+  --bs-btn-border-color: var(--bs-primary);
+  --bs-btn-color: #fff;
+  --bs-btn-hover-bg: color-mix(in srgb, var(--bs-primary) 85%, #000);
+  --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-primary) 85%, #000);
+  --bs-btn-active-bg: color-mix(in srgb, var(--bs-primary) 75%, #000);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--bs-primary) 75%, #000);
+  --bs-btn-disabled-bg: var(--bs-primary);
+  --bs-btn-disabled-border-color: var(--bs-primary);
+}
+.btn-secondary{
+  --bs-btn-bg: var(--bs-secondary);
+  --bs-btn-border-color: var(--bs-secondary);
+  --bs-btn-color: #08101f;
+  --bs-btn-hover-bg: color-mix(in srgb, var(--bs-secondary) 85%, #000);
+  --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-secondary) 85%, #000);
+  --bs-btn-active-bg: color-mix(in srgb, var(--bs-secondary) 75%, #000);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--bs-secondary) 75%, #000);
+  --bs-btn-disabled-bg: var(--bs-secondary);
+  --bs-btn-disabled-border-color: var(--bs-secondary);
+}
+.btn-danger{
+  --bs-btn-bg: var(--bs-danger);
+  --bs-btn-border-color: var(--bs-danger);
+  --bs-btn-color: #08101f;
+  --bs-btn-hover-bg: color-mix(in srgb, var(--bs-danger) 85%, #000);
+  --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-danger) 85%, #000);
+  --bs-btn-active-bg: color-mix(in srgb, var(--bs-danger) 75%, #000);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--bs-danger) 75%, #000);
+  --bs-btn-disabled-bg: var(--bs-danger);
+  --bs-btn-disabled-border-color: var(--bs-danger);
+}
+.btn-success{
+  --bs-btn-bg: var(--bs-success);
+  --bs-btn-border-color: var(--bs-success);
+  --bs-btn-color: #fff;
+  --bs-btn-hover-bg: color-mix(in srgb, var(--bs-success) 85%, #000);
+  --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-success) 85%, #000);
+  --bs-btn-active-bg: color-mix(in srgb, var(--bs-success) 75%, #000);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--bs-success) 75%, #000);
+  --bs-btn-disabled-bg: var(--bs-success);
+  --bs-btn-disabled-border-color: var(--bs-success);
+}
+.btn-warning{
+  --bs-btn-bg: var(--bs-warning);
+  --bs-btn-border-color: var(--bs-warning);
+  --bs-btn-color: #08101f;
+  --bs-btn-hover-bg: color-mix(in srgb, var(--bs-warning) 88%, #000);
+  --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-warning) 88%, #000);
+  --bs-btn-active-bg: color-mix(in srgb, var(--bs-warning) 80%, #000);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--bs-warning) 80%, #000);
+  --bs-btn-disabled-bg: var(--bs-warning);
+  --bs-btn-disabled-border-color: var(--bs-warning);
+}
+.btn-info{
+  --bs-btn-bg: var(--bs-info);
+  --bs-btn-border-color: var(--bs-info);
+  --bs-btn-color: #08101f;
+  --bs-btn-hover-bg: color-mix(in srgb, var(--bs-info) 85%, #000);
+  --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-info) 85%, #000);
+  --bs-btn-active-bg: color-mix(in srgb, var(--bs-info) 75%, #000);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--bs-info) 75%, #000);
+  --bs-btn-disabled-bg: var(--bs-info);
+  --bs-btn-disabled-border-color: var(--bs-info);
+}
+.btn-dark{
+  --bs-btn-bg: var(--bs-dark);
+  --bs-btn-border-color: var(--bs-dark);
+  --bs-btn-color: #08101f;
+  --bs-btn-hover-bg: color-mix(in srgb, var(--bs-dark) 85%, #000);
+  --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-dark) 85%, #000);
+  --bs-btn-active-bg: color-mix(in srgb, var(--bs-dark) 75%, #000);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--bs-dark) 75%, #000);
+  --bs-btn-disabled-bg: var(--bs-dark);
+  --bs-btn-disabled-border-color: var(--bs-dark);
+}
+
+/* Outline variants */
+.btn-outline-primary{
+  --bs-btn-color: var(--bs-primary);
+  --bs-btn-border-color: var(--bs-primary);
+  --bs-btn-hover-bg: var(--bs-primary);
+  --bs-btn-hover-border-color: var(--bs-primary);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-active-bg: color-mix(in srgb, var(--bs-primary) 75%, #000);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--bs-primary) 75%, #000);
+  --bs-btn-active-color: #fff;
+}
+.btn-outline-secondary{
+  --bs-btn-color: var(--bs-secondary);
+  --bs-btn-border-color: var(--bs-secondary);
+  --bs-btn-hover-bg: var(--bs-secondary);
+  --bs-btn-hover-border-color: var(--bs-secondary);
+  --bs-btn-hover-color: #08101f;
+  --bs-btn-active-bg: color-mix(in srgb, var(--bs-secondary) 75%, #000);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--bs-secondary) 75%, #000);
+  --bs-btn-active-color: #08101f;
+}
+.btn-outline-danger{
+  --bs-btn-color: var(--bs-danger);
+  --bs-btn-border-color: var(--bs-danger);
+  --bs-btn-hover-bg: var(--bs-danger);
+  --bs-btn-hover-border-color: var(--bs-danger);
+  --bs-btn-hover-color: #08101f;
+  --bs-btn-active-bg: color-mix(in srgb, var(--bs-danger) 75%, #000);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--bs-danger) 75%, #000);
+  --bs-btn-active-color: #08101f;
+}
+.btn-outline-success{
+  --bs-btn-color: var(--bs-success);
+  --bs-btn-border-color: var(--bs-success);
+  --bs-btn-hover-bg: var(--bs-success);
+  --bs-btn-hover-border-color: var(--bs-success);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-active-bg: color-mix(in srgb, var(--bs-success) 75%, #000);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--bs-success) 75%, #000);
+  --bs-btn-active-color: #fff;
+}
+.btn-outline-warning{
+  --bs-btn-color: color-mix(in srgb, var(--bs-warning) 92%, #000);
+  --bs-btn-border-color: var(--bs-warning);
+  --bs-btn-hover-bg: var(--bs-warning);
+  --bs-btn-hover-border-color: var(--bs-warning);
+  --bs-btn-hover-color: #08101f;
+  --bs-btn-active-bg: color-mix(in srgb, var(--bs-warning) 80%, #000);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--bs-warning) 80%, #000);
+  --bs-btn-active-color: #08101f;
+}
+.btn-outline-info{
+  --bs-btn-color: var(--bs-info);
+  --bs-btn-border-color: var(--bs-info);
+  --bs-btn-hover-bg: var(--bs-info);
+  --bs-btn-hover-border-color: var(--bs-info);
+  --bs-btn-hover-color: #08101f;
+  --bs-btn-active-bg: color-mix(in srgb, var(--bs-info) 75%, #000);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--bs-info) 75%, #000);
+  --bs-btn-active-color: #08101f;
+}
+.btn-outline-dark{
+  --bs-btn-color: #08101f;
+  --bs-btn-border-color: var(--bs-dark);
+  --bs-btn-hover-bg: var(--bs-dark);
+  --bs-btn-hover-border-color: var(--bs-dark);
+  --bs-btn-hover-color: #08101f;
+  --bs-btn-active-bg: color-mix(in srgb, var(--bs-dark) 75%, #000);
+  --bs-btn-active-border-color: color-mix(in srgb, var(--bs-dark) 75%, #000);
+  --bs-btn-active-color: #08101f;
+}
+
+/* ------------------------------------------------------------------
+   Badges: bind .bg-* and .text-bg-* to your theme palette
+------------------------------------------------------------------- */
+.badge.bg-primary, .text-bg-primary{ background-color: var(--bs-primary) !important; color: #fff !important; }
+.badge.bg-secondary, .text-bg-secondary{ background-color: var(--bs-secondary) !important; color: #08101f !important; }
+.badge.bg-success, .text-bg-success{ background-color: var(--bs-success) !important; color: #fff !important; }
+.badge.bg-info, .text-bg-info{ background-color: var(--bs-info) !important; color: #08101f !important; }
+.badge.bg-warning, .text-bg-warning{ background-color: var(--bs-warning) !important; color: #08101f !important; }
+.badge.bg-danger, .text-bg-danger{ background-color: var(--bs-danger) !important; color: #08101f !important; }
+.badge.bg-dark, .text-bg-dark{ background-color: var(--bs-dark) !important; color: #08101f !important; }
+
+/* Avatar initials in navbar */
+.hh-avatar{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background-color: var(--bs-primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  user-select: none;
 }

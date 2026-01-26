@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Platform Tests{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h1 class="h4 mb-0">Test Runner</h1>
+    <div class="text-muted small">Dev-only. Runs `manage.py test` inside the web container.</div>
+  </div>
+  <a class="btn btn-sm btn-primary" href="{% url 'platform:dashboard' %}">Back</a>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="h6 mb-3">Apps</h2>
+
+        <div class="list-group">
+          {% for a in apps %}
+            <div class="list-group-item">
+              <div class="d-flex align-items-center justify-content-between">
+                <div>
+                  <div class="fw-semibold">{{ a.label }}</div>
+                  <div class="text-muted small">
+                    {% if a.tests %}
+                      {{ a.tests|length }} test file{{ a.tests|length|pluralize }}
+                    {% else %}
+                      No `tests/` files found
+                    {% endif %}
+                  </div>
+                </div>
+                <form method="post" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="app" value="{{ a.label }}">
+                  <button
+                    class="btn btn-sm btn-primary"
+                    type="submit"
+                    data-confirm="Run tests for {{ a.label }}? This may take a while."
+                  >
+                    Run
+                  </button>
+                </form>
+              </div>
+
+              {% if a.tests %}
+                <ul class="mt-2 mb-0 small text-muted">
+                  {% for t in a.tests %}
+                    <li><code>{{ t }}</code></li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="h6 mb-3">Latest run</h2>
+
+        {% if result %}
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div>
+              <div class="fw-semibold">{{ result.app }}</div>
+              <div class="text-muted small">{{ result.duration_ms }} ms · exit {{ result.returncode }}</div>
+            </div>
+            {% if result.ok %}
+              <span class="badge text-bg-success">PASS</span>
+            {% else %}
+              <span class="badge text-bg-danger">FAIL</span>
+            {% endif %}
+          </div>
+
+          <pre class="bg-body-tertiary p-3 rounded small mb-0" style="max-height: 65vh; overflow: auto;"><code>{{ result.output }}</code></pre>
+        {% else %}
+          <div class="text-muted">Run a test suite to see output here.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

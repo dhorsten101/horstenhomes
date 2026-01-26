@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Works when invoked from bash or zsh (avoid BASH_SOURCE dependency)
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SELF_HOSTED_DIR="${ROOT}/ops/sentry/self-hosted"
+
+if [[ ! -d "${SELF_HOSTED_DIR}" ]]; then
+  echo "Missing ${SELF_HOSTED_DIR} (nothing to stop)"
+  exit 0
+fi
+
+cd "${SELF_HOSTED_DIR}"
+docker compose down

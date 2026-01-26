@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}Edit document{% endblock %}
+
+{% block content %}
+{% url "documents:detail" pk=form.instance.pk as back_url %}
+{% include "components/crud_model_form.html" with title="Edit document" form=form back_url=back_url cancel_url=back_url submit_text="Save" %}
+{% endblock %}
+

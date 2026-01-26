@@ -36,6 +36,9 @@ docker run --rm -it \
   --name ${CONTAINER_NAME} \
   --network ${NETWORK} \
   --env-file .env.dev \
+  ${SENTRY_DSN:+-e "SENTRY_DSN=${SENTRY_DSN}"} \
+  ${SENTRY_ENVIRONMENT:+-e "SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT}"} \
+  ${SENTRY_TRACES_SAMPLE_RATE:+-e "SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}"} \
   -p ${PORT}:8000 \
   -v "$(pwd)":/app \
   "${DOCKER_SOCK_MOUNT[@]}" \

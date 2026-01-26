@@ -7,8 +7,6 @@ from apps.leases.models import Lease
 
 
 class LeaseForm(BootstrapModelForm):
-	tags = forms.JSONField(required=False, initial=list)
-
 	class Meta:
 		model = Lease
 		fields = [
@@ -20,9 +18,6 @@ class LeaseForm(BootstrapModelForm):
 			"rent_amount",
 			"deposit_amount",
 			"billing_day",
-			"external_id",
-			"source",
-			"tags",
 		]
 		widgets = {
 			"start_date": forms.DateInput(attrs={"type": "date"}),

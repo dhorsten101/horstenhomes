@@ -36,6 +36,10 @@ class Lease(TimeStampedUUIDModel):
 		indexes = [
 			models.Index(fields=["unit", "status"]),
 			models.Index(fields=["primary_tenant", "status"]),
+			# Common listing/query patterns
+			models.Index(fields=["unit", "created_at"]),
+			models.Index(fields=["primary_tenant", "created_at"]),
+			models.Index(fields=["status", "created_at"]),
 		]
 
 	def __str__(self) -> str:

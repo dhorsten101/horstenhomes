@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}New todo{% endblock %}
+
+{% block content %}
+{% url "todo:list" as back_url %}
+{% include "components/crud_model_form.html" with title="New todo" back_url=back_url cancel_url=back_url submit_text="Create" %}
+{% endblock %}
+

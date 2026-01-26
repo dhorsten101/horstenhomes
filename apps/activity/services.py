@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from django.contrib.contenttypes.models import ContentType
 
+from apps.activity.models import ActivityEvent, Note, Tag, TaggedItem
 from apps.audits.middleware import get_audit_context
 from apps.audits.utils import to_jsonable
-from apps.activity.models import ActivityEvent, Note, Tag, TaggedItem
 
 
 def _content_type_for(obj: Any) -> ContentType:
@@ -39,7 +39,7 @@ def log_activity(
 	obj: Any,
 	verb: str,
 	message: str = "",
-	metadata: Optional[dict] = None,
+	metadata: dict | None = None,
 ) -> ActivityEvent:
 	ctx = get_audit_context()
 	return ActivityEvent.objects.create(

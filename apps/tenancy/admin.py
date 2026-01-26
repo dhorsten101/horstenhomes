@@ -2,8 +2,8 @@ from django.contrib import admin, messages
 
 from apps.audits.admin_mixins import AdminAuditMixin
 from apps.audits.services import audit_log
-from apps.tenancy.models import Tenant, Domain, TenantStatus
-from apps.tenancy.services.onboarding import provision_tenant, suspend_tenant, activate_tenant
+from apps.tenancy.models import Domain, Tenant, TenantStatus
+from apps.tenancy.services.onboarding import activate_tenant, provision_tenant, suspend_tenant
 
 
 class TenantAdmin(AdminAuditMixin):

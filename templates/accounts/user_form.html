@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Accounts{% endblock %}
+
+{% block content %}
+{% if form.instance and form.instance.pk %}
+  <div class="container pt-4" style="max-width: 900px;">
+    <div class="mb-3">
+      <span class="text-muted">Role:</span>
+      {% if form.instance.is_superuser %}
+        <span class="badge bg-primary">Platform admin</span>
+      {% elif form.instance.is_staff %}
+        <span class="badge bg-success">Tenant admin</span>
+      {% else %}
+        <span class="badge bg-secondary">User</span>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+{% include "components/crud_model_form.html" with title=title form=form back_url=back_url cancel_url=cancel_url submit_text=submit_text %}
+{% endblock %}
+

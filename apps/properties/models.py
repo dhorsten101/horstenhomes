@@ -23,6 +23,10 @@ class Property(TimeStampedUUIDModel):
 	name = models.CharField(max_length=200, db_index=True)
 	property_type = models.CharField(max_length=20, choices=PropertyType.choices, db_index=True)
 
+	purchase_date = models.DateField(null=True, blank=True, db_index=True)
+	previous_purchase_price = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+	purchase_price = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+
 	address = models.ForeignKey(
 		"addresses.Address",
 		null=True,
@@ -55,6 +59,9 @@ class Unit(TimeStampedUUIDModel):
 	bathrooms = models.PositiveSmallIntegerField(null=True, blank=True)
 	size_m2 = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
+	# Value/cost basis of this unit (apartment purchase price OR build cost).
+	purchase_price = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+
 	status = models.CharField(max_length=20, choices=UnitStatus.choices, default=UnitStatus.VACANT, db_index=True)
 
 	external_id = models.CharField(max_length=120, blank=True, db_index=True)
@@ -66,6 +73,9 @@ class Unit(TimeStampedUUIDModel):
 		]
 		indexes = [
 			models.Index(fields=["property", "status"]),
+			# Common listing/query patterns
+			models.Index(fields=["property", "created_at"]),
+			models.Index(fields=["status", "created_at"]),
 		]
 
 	def __str__(self) -> str:

@@ -4,7 +4,31 @@
 {% block content %}
     <div class="container py-5" style="max-width: 680px;">
         <div class="alert alert-success">
-            Thanks — your request has been submitted. We will contact you shortly.
+            Thanks — your request has been submitted.
         </div>
+
+        {% if request_uid %}
+            <div
+                class="mt-3"
+                hx-get="{% url 'tenant_signup_status' request_uid %}"
+                hx-trigger="load, every 2s"
+                hx-swap="innerHTML"
+            >
+                <div class="alert alert-info mb-0">Checking provisioning status…</div>
+            </div>
+            <div class="small text-muted mt-3">
+                If you close this page, you can still use the <a href="/login/">login page</a> and enter your tenant slug.
+            </div>
+        {% else %}
+            <div class="card shadow-sm mt-3">
+                <div class="card-body p-4">
+                    <h2 class="h5 mb-2">Next step</h2>
+                    <p class="text-muted mb-3">
+                        Keep this tab open while we provision your tenant. You’ll be redirected automatically.
+                    </p>
+                    <a class="btn btn-outline-primary" href="/login/">Go to login</a>
+                </div>
+            </div>
+        {% endif %}
     </div>
 {% endblock %}

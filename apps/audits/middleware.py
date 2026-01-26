@@ -3,7 +3,6 @@ from __future__ import annotations
 import uuid
 from contextvars import ContextVar
 from dataclasses import dataclass
-from typing import Optional
 from time import perf_counter
 
 from django.utils.deprecation import MiddlewareMixin
@@ -14,11 +13,16 @@ try:
 except Exception:
 	get_tenant = None
 
+try:
+	import sentry_sdk
+except Exception:  # pragma: no cover
+	sentry_sdk = None
+
 
 @dataclass(frozen=True)
 class AuditContext:
 	request_id: str
-	ip_address: Optional[str]
+	ip_address: str | None
 	user_agent: str
 	request_method: str
 	request_path: str
@@ -27,10 +31,10 @@ class AuditContext:
 	actor_email: str
 
 
-_audit_ctx: ContextVar[Optional[AuditContext]] = ContextVar("audit_ctx", default=None)
+_audit_ctx: ContextVar[AuditContext | None] = ContextVar("audit_ctx", default=None)
 
 
-def get_audit_context() -> Optional[AuditContext]:
+def get_audit_context() -> AuditContext | None:
 	return _audit_ctx.get()
 
 
@@ -78,6 +82,18 @@ class AuditContextMiddleware(MiddlewareMixin):
 		
 		# Optional: expose request_id in response for debugging
 		request.audit_request_id = request_id
+
+		# Sentry enrichment (best-effort; safe if SDK isn't installed)
+		if sentry_sdk is not None:
+			try:
+				with sentry_sdk.configure_scope() as scope:
+					if tenant_schema:
+						scope.set_tag("tenant_schema", tenant_schema)
+					scope.set_tag("request_id", request_id)
+					if actor_email:
+						scope.set_user({"id": actor_user_id or None, "email": actor_email})
+			except Exception:
+				pass
 	
 	def process_response(self, request, response):
 		rid = getattr(request, "audit_request_id", None)

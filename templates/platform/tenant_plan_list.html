@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load platform_extras %}
+
+{% block title %}Tenant Plans | Platform{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h1 class="h4 mb-0">Tenant Plans</h1>
+  <a class="btn btn-sm btn-primary" href="{% url 'platform:entitlements_dashboard' %}">Back</a>
+</div>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} mb-2" role="alert">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<div class="table-responsive">
+  <table class="table table-sm align-middle">
+    <thead>
+      <tr>
+        <th>Tenant</th>
+        <th>Schema</th>
+        <th>Current plan</th>
+        <th>Status</th>
+        <th>Overrides</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in tenants %}
+        {% with tp=tps|get_item:t.id %}
+        <tr>
+          <td>{{ t.slug }}</td>
+          <td><code>{{ t.schema_name }}</code></td>
+          <td>{% if tp and tp.plan %}<code>{{ tp.plan.code }}</code>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+          <td>{% if tp %}<span class="badge bg-secondary">{{ tp.status }}</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+          <td class="small text-muted">
+            {% if tp %}
+              <div><span class="text-muted">quota_overrides</span>: <code>{{ tp.quota_overrides }}</code></div>
+              <div><span class="text-muted">feature_overrides</span>: <code>{{ tp.feature_overrides }}</code></div>
+            {% else %}
+              <span class="text-muted">—</span>
+            {% endif %}
+          </td>
+          <td class="text-end" style="min-width: 360px;">
+            <form method="post" action="{% url 'platform:tenant_plan_set' t.id %}" class="d-flex gap-2 justify-content-end align-items-start">
+              {% csrf_token %}
+              <div>
+                <select class="form-select form-select-sm" name="plan_id" required>
+                  {% for p in plans %}
+                    <option value="{{ p.id }}" {% if tp and tp.plan_id == p.id %}selected{% endif %}>{{ p.code }}</option>
+                  {% endfor %}
+                </select>
+                <select class="form-select form-select-sm mt-1" name="status">
+                  <option value="active" {% if tp and tp.status == "active" %}selected{% endif %}>active</option>
+                  <option value="trial" {% if tp and tp.status == "trial" %}selected{% endif %}>trial</option>
+                  <option value="past_due" {% if tp and tp.status == "past_due" %}selected{% endif %}>past_due</option>
+                  <option value="canceled" {% if tp and tp.status == "canceled" %}selected{% endif %}>canceled</option>
+                </select>
+              </div>
+              <div class="flex-grow-1" style="max-width: 360px;">
+                <input class="form-control form-control-sm" name="quota_overrides" placeholder='quota_overrides JSON (e.g. {"max_users": 10})' value='{% if tp %}{{ tp.quota_overrides|tojson }}{% endif %}'>
+                <input class="form-control form-control-sm mt-1" name="feature_overrides" placeholder='feature_overrides JSON (e.g. {"crm_beta": true})' value='{% if tp %}{{ tp.feature_overrides|tojson }}{% endif %}'>
+              </div>
+              <button class="btn btn-sm btn-primary" type="submit" data-confirm="Update tenant plan?">Save</button>
+            </form>
+          </td>
+        </tr>
+        {% endwith %}
+      {% empty %}
+        <tr><td colspan="6" class="text-muted">No tenants.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import traceback
 import time
+import traceback
 
 from django.utils.deprecation import MiddlewareMixin
 

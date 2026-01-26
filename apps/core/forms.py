@@ -10,13 +10,13 @@ class BootstrapModelForm(forms.ModelForm):
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		for name, field in self.fields.items():
+		for _name, field in self.fields.items():
 			w = field.widget
 			classes = set((w.attrs.get("class") or "").split())
 
-			if isinstance(w, (forms.CheckboxInput, forms.CheckboxSelectMultiple)):
+			if isinstance(w, forms.CheckboxInput | forms.CheckboxSelectMultiple):
 				classes.add("form-check-input")
-			elif isinstance(w, (forms.Select, forms.SelectMultiple)):
+			elif isinstance(w, forms.Select | forms.SelectMultiple):
 				classes.add("form-select")
 			else:
 				classes.add("form-control")

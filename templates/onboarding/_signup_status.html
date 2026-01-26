@@ -1,0 +1,12 @@
+<div class="alert alert-info mb-0">
+  <div class="fw-semibold mb-1">Provisioning status</div>
+  <div class="small">
+    <div><span class="text-muted">Company:</span> {{ tr.company_name }}</div>
+    <div><span class="text-muted">Status:</span> <code>{{ tr.status }}</code></div>
+    {% if tr.desired_slug %}<div><span class="text-muted">Slug:</span> <code>{{ tr.desired_slug }}</code></div>{% endif %}
+  </div>
+  <div class="small text-muted mt-2">
+    Provisioning your tenant now… you’ll be redirected automatically as soon as it’s ready.
+  </div>
+</div>
+

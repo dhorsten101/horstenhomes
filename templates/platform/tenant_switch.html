@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Switch tenant | Platform{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h1 class="h4 mb-0">Switch tenant</h1>
+    <div class="text-muted small">Open tenant CRM/login in one click (no impersonation)</div>
+  </div>
+  <a class="btn btn-sm btn-primary" href="{% url 'platform:dashboard' %}">Back</a>
+</div>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+  <div class="col-12 col-md-6">
+    <label class="form-label">Search</label>
+    <input class="form-control" name="q" value="{{ q }}" placeholder="Search by tenant name or slug..." />
+  </div>
+  <div class="col-12 col-md-2">
+    <button class="btn btn-primary w-100" type="submit">Search</button>
+  </div>
+  <div class="col-12 col-md-2">
+    <a class="btn btn-outline-secondary w-100" href="{% url 'platform:tenant_switch' %}">Clear</a>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-sm align-middle">
+    <thead>
+      <tr>
+        <th>Tenant</th>
+        <th>Slug</th>
+        <th>Domain</th>
+        <th>Status</th>
+        <th class="text-end">Open</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+        <tr>
+          <td>{{ r.tenant.name }}</td>
+          <td><code>{{ r.tenant.slug }}</code></td>
+          <td><code>{{ r.domain }}</code></td>
+          <td><span class="badge bg-secondary">{{ r.tenant.status }}</span></td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-outline-secondary" href="{{ r.login_url }}" target="_blank" rel="noopener">Login</a>
+            <a class="btn btn-sm btn-primary" href="{{ r.crm_url }}" target="_blank" rel="noopener">CRM</a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" class="text-muted">No tenants.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+

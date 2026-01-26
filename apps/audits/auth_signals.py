@@ -3,8 +3,8 @@ from __future__ import annotations
 from django.contrib.auth.signals import user_logged_in, user_logged_out, user_login_failed
 from django.dispatch import receiver
 
-from apps.audits.services import audit_log
 from apps.audits.models import AuditStatus
+from apps.audits.services import audit_log
 
 
 @receiver(user_logged_in)

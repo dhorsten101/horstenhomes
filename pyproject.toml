@@ -7,7 +7,37 @@ dependencies = [
   "psycopg[binary]>=3.1",
   "django-tenants>=3.7",
   "celery>=5.3",
+  "flower>=2.0",
   "redis>=5.0",
   "gunicorn>=21.2",
   "python-dotenv>=1.0",
+  "sentry-sdk[django]>=2.0",
+  "ruff>=0.9",
 ]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+extend-exclude = [
+  "ops/sentry/self-hosted",
+  "**/migrations/*.py",
+]
+
+[tool.ruff.lint]
+select = [
+  "E", "F",        # pycodestyle/pyflakes
+  "I",            # import sorting
+  "B",            # bugbear
+  "UP",           # pyupgrade
+]
+ignore = [
+  "E501",         # handled by formatter; keep lint signal focused
+  "E101",         # repo uses tabs in many docstrings/blocks
+]
+
+[tool.ruff.lint.per-file-ignores]
+"config/settings/*.py" = ["F403", "F405"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "tab"

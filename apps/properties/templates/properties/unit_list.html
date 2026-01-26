@@ -15,13 +15,15 @@
     </div>
   </div>
 
-  <form class="row g-2 mb-3" method="get">
-    <div class="col-md-8">
+  <form class="row g-2 mb-3 align-items-center" method="get" style="max-width: 720px;">
+    <div class="col-12 col-md-8">
       <input class="form-control" name="q" value="{{ q }}" placeholder="Search unit number or property..." />
     </div>
-    <div class="col-md-4 d-flex gap-2">
-      <button class="btn btn-outline-secondary" type="submit">Search</button>
-      <a class="btn btn-outline-secondary" href="{% url 'properties:unit_list' %}">Clear</a>
+    <div class="col-12 col-md-auto">
+      <div class="btn-group" role="group" aria-label="Search actions">
+        <button class="btn btn-outline-secondary" type="submit">Search</button>
+        <a class="btn btn-outline-danger" href="{% url 'properties:unit_list' %}">Clear</a>
+      </div>
     </div>
   </form>
 

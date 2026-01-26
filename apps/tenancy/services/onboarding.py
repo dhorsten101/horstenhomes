@@ -1,14 +1,13 @@
+from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import transaction
-from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django_tenants.utils import schema_context
 
-from apps.tenancy.models import Tenant, Domain, TenantStatus
-
+from apps.tenancy.models import Domain, Tenant, TenantStatus
 
 RESERVED = {"public", "admin", "www", "api", "root", "static", "media"}
 
@@ -34,7 +33,14 @@ def create_tenant_record(*, name: str, slug: str, domain: str, is_primary=True) 
 	return tenant
 
 
-def ensure_tenant_admin_user(*, tenant: Tenant, admin_email: str, admin_password: str | None = None):
+def ensure_tenant_admin_user(
+	*,
+	tenant: Tenant,
+	admin_email: str,
+	admin_password: str | None = None,
+	admin_first_name: str | None = None,
+	admin_last_name: str | None = None,
+):
 	"""
 	Create/update a tenant-local superuser for the given tenant schema.
 
@@ -63,6 +69,28 @@ def ensure_tenant_admin_user(*, tenant: Tenant, admin_email: str, admin_password
 
 		u.save()
 
+		# Best-effort: attach a Contact so we can show initials/name in the UI.
+		first = (admin_first_name or "").strip()
+		last = (admin_last_name or "").strip()
+		display_name = (f"{first} {last}".strip() if first or last else "")
+		if display_name:
+			try:
+				from apps.contacts.models import Contact
+
+				if not getattr(u, "contact_id", None):
+					c = Contact.objects.filter(email__iexact=admin_email).first()
+					if not c:
+						c = Contact.objects.create(display_name=display_name, email=admin_email)
+					u.contact = c
+					u.save(update_fields=["contact"])
+				else:
+					# Keep contact name in sync if present
+					if u.contact and not (u.contact.display_name or "").strip():
+						u.contact.display_name = display_name
+						u.contact.save(update_fields=["display_name", "updated_at"])
+			except Exception:
+				pass
+
 		# If the user cannot log in yet, generate a one-time set-password link payload.
 		if not u.has_usable_password():
 			uidb64 = urlsafe_base64_encode(force_bytes(u.pk))
@@ -72,7 +100,14 @@ def ensure_tenant_admin_user(*, tenant: Tenant, admin_email: str, admin_password
 	return None
 
 
-def provision_tenant(*, tenant: Tenant, admin_email: str | None = None, admin_password: str | None = None):
+def provision_tenant(
+	*,
+	tenant: Tenant,
+	admin_email: str | None = None,
+	admin_password: str | None = None,
+	admin_first_name: str | None = None,
+	admin_last_name: str | None = None,
+):
 	"""
 	Creates schema (django-tenants via save) + migrates tenant schema.
 	Optionally creates/updates a tenant-local admin user.
@@ -88,7 +123,13 @@ def provision_tenant(*, tenant: Tenant, admin_email: str | None = None, admin_pa
 
 	reset_payload = None
 	if admin_email:
-		reset_payload = ensure_tenant_admin_user(tenant=tenant, admin_email=admin_email, admin_password=admin_password)
+		reset_payload = ensure_tenant_admin_user(
+			tenant=tenant,
+			admin_email=admin_email,
+			admin_password=admin_password,
+			admin_first_name=admin_first_name,
+			admin_last_name=admin_last_name,
+		)
 
 	tenant.status = TenantStatus.ACTIVE
 	tenant.save(update_fields=["status"])

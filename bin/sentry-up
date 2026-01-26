@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Works when invoked from bash or zsh (avoid BASH_SOURCE dependency)
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SELF_HOSTED_DIR="${ROOT}/ops/sentry/self-hosted"
+
+find_modern_bash() {
+  # macOS ships bash 3.2 by default; Sentry self-hosted requires bash >= 4.4
+  if [[ -x "/opt/homebrew/bin/bash" ]]; then
+    echo "/opt/homebrew/bin/bash"
+    return
+  fi
+  if [[ -x "/usr/local/bin/bash" ]]; then
+    echo "/usr/local/bin/bash"
+    return
+  fi
+  # fallback to whatever is on PATH (may be old on macOS)
+  command -v bash 2>/dev/null || true
+}
+
+if [[ ! -d "${SELF_HOSTED_DIR}" ]]; then
+  echo "Missing ${SELF_HOSTED_DIR}"
+  echo "Cloning getsentry/self-hosted..."
+  mkdir -p "${ROOT}/ops/sentry"
+  if ! command -v git >/dev/null 2>&1; then
+    echo "Error: git is not installed or not on PATH."
+    exit 1
+  fi
+  git clone https://github.com/getsentry/self-hosted.git "${SELF_HOSTED_DIR}"
+fi
+
+cd "${SELF_HOSTED_DIR}"
+
+if [[ ! -f "./install.sh" ]]; then
+  echo "Missing install.sh in ${SELF_HOSTED_DIR}"
+  exit 1
+fi
+
+MODERN_BASH="$(find_modern_bash)"
+if [[ -z "${MODERN_BASH}" ]]; then
+  echo "Error: bash not found."
+  exit 1
+fi
+
+# Check bash version
+if ! "${MODERN_BASH}" -lc 'v=${BASH_VERSINFO[0]:-0}.${BASH_VERSINFO[1]:-0}; awk "BEGIN{exit !($v >= 4.4)}"'; then
+  echo "Error: Sentry self-hosted requires bash >= 4.4, but your bash is:"
+  "${MODERN_BASH}" --version | head -n 1 || true
+  echo ""
+  echo "Fix (macOS):"
+  echo "  brew install bash"
+  echo "Then re-run:"
+  echo "  ${ROOT}/bin/sentry-up"
+  exit 1
+fi
+
+"${MODERN_BASH}" ./install.sh
+docker compose up -d
+
+echo "Sentry should be at http://localhost:9000"
+

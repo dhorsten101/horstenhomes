@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Todo{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h1 class="h4 mb-0">Todo</h1>
+      <div class="text-muted small">Status: {{ status|default:"open" }}</div>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-sm btn-primary" href="{% url 'crm_dashboard' %}">Back</a>
+      <a class="btn btn-sm btn-success" href="{% url 'todo:create' %}">New todo</a>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2 mb-3">
+    <a class="btn btn-sm {% if status == 'open' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{% url 'todo:list' %}?status=open">Open</a>
+    <a class="btn btn-sm {% if status == 'done' %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{% url 'todo:list' %}?status=done">Done</a>
+  </div>
+
+  <div class="card border-0">
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Due</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in todos %}
+            <tr>
+              <td>
+                <a class="text-decoration-none" href="{% url 'todo:detail' t.pk %}">
+                  {% if t.status == 'done' %}<s>{{ t.title }}</s>{% else %}{{ t.title }}{% endif %}
+                </a>
+                <div class="small text-muted">
+                  {% if t.content_type and t.object_id %}
+                    {{ t.content_type.app_label }}.{{ t.content_type.model }} #{{ t.object_id }}
+                  {% else %}
+                    Unattached
+                  {% endif %}
+                </div>
+              </td>
+              <td class="small text-muted">{{ t.due_date|default:"—" }}</td>
+              <td>
+                {% if t.status == 'done' %}
+                  <span class="badge bg-secondary">done</span>
+                {% else %}
+                  <span class="badge bg-success">open</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <form method="post" action="{% url 'todo:toggle' t.pk %}" class="d-inline">
+                  {% csrf_token %}
+                  <button class="btn btn-sm {% if t.status == 'done' %}btn-outline-secondary{% else %}btn-outline-success{% endif %}" type="submit">
+                    {% if t.status == 'done' %}Reopen{% else %}Done{% endif %}
+                  </button>
+                </form>
+                <a class="btn btn-sm btn-outline-warning ms-1" href="{% url 'todo:edit' t.pk %}">Edit</a>
+                <form method="post" action="{% url 'todo:delete' t.pk %}" class="d-inline ms-1">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete this todo?">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="text-muted text-center py-4">No todos.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

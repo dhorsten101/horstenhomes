@@ -7,7 +7,11 @@ asgiref==3.11.0
 billiard==4.2.4
     # via celery
 celery==5.6.2
-    # via horstenhomes (pyproject.toml)
+    # via
+    #   horstenhomes (pyproject.toml)
+    #   flower
+certifi==2026.1.4
+    # via sentry-sdk
 click==8.3.1
     # via
     #   celery
@@ -24,16 +28,23 @@ django==5.2.10
     # via
     #   horstenhomes (pyproject.toml)
     #   django-tenants
+    #   sentry-sdk
 django-tenants==3.9.0
+    # via horstenhomes (pyproject.toml)
+flower==2.0.1
     # via horstenhomes (pyproject.toml)
 gunicorn==23.0.0
     # via horstenhomes (pyproject.toml)
+humanize==4.15.0
+    # via flower
 kombu==5.6.2
     # via celery
 packaging==25.0
     # via
     #   gunicorn
     #   kombu
+prometheus-client==0.24.1
+    # via flower
 prompt-toolkit==3.0.52
     # via click-repl
 psycopg==3.3.2
@@ -44,18 +55,28 @@ python-dateutil==2.9.0.post0
     # via celery
 python-dotenv==1.2.1
     # via horstenhomes (pyproject.toml)
+pytz==2025.2
+    # via flower
 redis==7.1.0
+    # via horstenhomes (pyproject.toml)
+ruff==0.14.14
+    # via horstenhomes (pyproject.toml)
+sentry-sdk==2.50.0
     # via horstenhomes (pyproject.toml)
 six==1.17.0
     # via python-dateutil
 sqlparse==0.5.5
     # via django
+tornado==6.5.4
+    # via flower
 typing-extensions==4.15.0
     # via psycopg
 tzdata==2025.3
     # via kombu
 tzlocal==5.3.1
     # via celery
+urllib3==2.6.3
+    # via sentry-sdk
 vine==5.1.0
     # via
     #   amqp

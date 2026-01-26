@@ -8,33 +8,41 @@
 
         <form method="post" class="card p-4 shadow-sm">
             {% csrf_token %}
+            <input type="hidden" name="plan" value="{{ plan|default:'free' }}">
 
             <div class="mb-3">
-                <label class="form-label">Company name</label>
-                <input name="company_name" class="form-control" required>
+                <label class="form-label">Company name <span class="text-danger" aria-hidden="true">*</span></label>
+                <input name="company_name" class="form-control" value="{{ values.company_name|default:'' }}" required>
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Desired slug (optional)</label>
-                <input name="desired_slug" class="form-control" placeholder="acme">
-                <div class="form-text">Lowercase, numbers, hyphens only.</div>
+                <label class="form-label">Desired slug <span class="text-danger" aria-hidden="true">*</span></label>
+                <input name="desired_slug" class="form-control" placeholder="acme" value="{{ values.desired_slug|default:'' }}" required pattern="[a-z0-9-]+">
+                <div class="form-text">Lowercase, numbers, hyphens only. Required for instant provisioning.</div>
             </div>
 
             <hr class="my-4">
 
             <div class="mb-3">
-                <label class="form-label">Contact name</label>
-                <input name="contact_name" class="form-control" required>
+                <label class="form-label">Your name <span class="text-danger" aria-hidden="true">*</span></label>
+                <div class="row g-2">
+                    <div class="col-12 col-md-6">
+                        <input name="contact_first_name" class="form-control" placeholder="First name" value="{{ values.contact_first_name|default:'' }}" required>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <input name="contact_last_name" class="form-control" placeholder="Last name" value="{{ values.contact_last_name|default:'' }}" required>
+                    </div>
+                </div>
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Contact email</label>
-                <input name="contact_email" type="email" class="form-control" required>
+                <label class="form-label">Contact email <span class="text-danger" aria-hidden="true">*</span></label>
+                <input name="contact_email" type="email" class="form-control" value="{{ values.contact_email|default:'' }}" required>
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Contact phone (optional)</label>
-                <input name="contact_phone" class="form-control">
+                <input name="contact_phone" class="form-control" value="{{ values.contact_phone|default:'' }}">
             </div>
 
             <button class="btn btn-primary btn-lg w-100" type="submit">Submit request</button>

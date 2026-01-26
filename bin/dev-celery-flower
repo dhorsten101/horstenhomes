@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+NETWORK="${NETWORK:-horstenhomes-net}"
+WEB_IMAGE="${WEB_IMAGE:-horstenhomes-dev:latest}"
+NAME="${CELERY_FLOWER_NAME:-hh-celery-flower}"
+ENV_FILE="${ENV_FILE:-.env.dev}"
+PORT="${CELERY_FLOWER_PORT:-5555}"
+
+echo "▶ Starting Flower (Celery UI): ${NAME}"
+docker rm -f "${NAME}" >/dev/null 2>&1 || true
+
+docker run -d --name "${NAME}" --network "${NETWORK}" \
+  --env-file "${ENV_FILE}" \
+  -e PYTHONPATH=/app \
+  -p "${PORT}:5555" \
+  -v "$(pwd)":/app \
+  "${WEB_IMAGE}" \
+  bash -lc "uv pip install --system flower >/dev/null 2>&1 || true; celery -A config flower --port=5555 --broker=\${CELERY_BROKER_URL:-redis://hh-redis:6379/0}" >/dev/null
+
+echo "✅ Flower up: http://127.0.0.1:${PORT}/"
+echo "   Logs: docker logs -f ${NAME}"
+

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import logging
-import threading
 import sys
+import threading
 from typing import Any
 
 from django.apps import apps as django_apps

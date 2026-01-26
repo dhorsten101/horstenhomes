@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from apps.core.mixins import PostOnlyDeleteMixin, TenantSchemaRequiredMixin
+from apps.core.mixins import PostOnlyDeleteMixin, TenantSchemaRequiredMixin, WorkItemContextMixin
 from apps.leases.forms import LeaseForm
 from apps.leases.models import Lease
 from apps.properties.models import Unit
@@ -41,7 +41,7 @@ class LeaseListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView):
 		return ctx
 
 
-class LeaseDetailView(TenantSchemaRequiredMixin, LoginRequiredMixin, DetailView):
+class LeaseDetailView(WorkItemContextMixin, TenantSchemaRequiredMixin, LoginRequiredMixin, DetailView):
 	model = Lease
 	template_name = "leases/lease_detail.html"
 	context_object_name = "lease"

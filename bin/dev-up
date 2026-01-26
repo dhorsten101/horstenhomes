@@ -49,7 +49,10 @@ elif docker ps -a --format '{{.Names}}' | grep -q "^${PG_NAME}$"; then
       -e POSTGRES_USER="${DB_USER:-horstenhomes}" \
       -e POSTGRES_PASSWORD="${DB_PASSWORD:-horstenhomes}" \
       -p "${PG_PORT}:5432" \
-      "${PG_IMAGE}" >/dev/null
+      "${PG_IMAGE}" \
+      -c shared_preload_libraries=pg_stat_statements \
+      -c pg_stat_statements.track=all \
+      -c pg_stat_statements.max=10000 >/dev/null
   fi
 else
   docker run -d --name "${PG_NAME}" --network "${NETWORK}" \
@@ -57,7 +60,10 @@ else
     -e POSTGRES_USER="${DB_USER:-horstenhomes}" \
     -e POSTGRES_PASSWORD="${DB_PASSWORD:-horstenhomes}" \
     -p "${PG_PORT}:5432" \
-    "${PG_IMAGE}" >/dev/null
+    "${PG_IMAGE}" \
+    -c shared_preload_libraries=pg_stat_statements \
+    -c pg_stat_statements.track=all \
+    -c pg_stat_statements.max=10000 >/dev/null
 fi
 
 echo "▶ Ensuring Redis is running: ${REDIS_NAME}"
@@ -100,9 +106,21 @@ else
 fi
 
 # Start detached so PyCharm can stop it via a separate command, and you can tail logs.
+SENTRY_ENV=()
+if [[ -n "${SENTRY_DSN:-}" ]]; then
+  SENTRY_ENV+=(-e "SENTRY_DSN=${SENTRY_DSN}")
+fi
+if [[ -n "${SENTRY_ENVIRONMENT:-}" ]]; then
+  SENTRY_ENV+=(-e "SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT}")
+fi
+if [[ -n "${SENTRY_TRACES_SAMPLE_RATE:-}" ]]; then
+  SENTRY_ENV+=(-e "SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}")
+fi
+
 docker run -d --name "${WEB_NAME}" --network "${NETWORK}" \
   --env-file "${ENV_FILE}" \
   -e PYTHONPATH=/app \
+  "${SENTRY_ENV[@]}" \
   -p "${WEB_PORT}:8000" \
   -v "$(pwd)":/app \
   "${DOCKER_SOCK_MOUNT[@]}" \

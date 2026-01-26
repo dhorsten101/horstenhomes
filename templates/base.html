@@ -1,4 +1,5 @@
 {% load static %}
+{% load static_extras %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -23,11 +24,23 @@
     <link rel="icon" href="{% static 'favicon.png' %}" type="image/png">
     <link rel="apple-touch-icon" href="{% static 'favicon.png' %}">
 
-    <link href="/static/css/theme.css" rel="stylesheet">
+    <link href="{% static_v 'css/theme.css' %}" rel="stylesheet">
+    {% if tenant_theme %}
+      <style>
+        :root {
+          --bs-primary: {{ tenant_theme.primary }};
+          --bs-secondary: {{ tenant_theme.secondary }};
+          --bs-body-bg: {{ tenant_theme.body_bg }};
+          --bs-body-color: {{ tenant_theme.body_color }};
+          --bs-link-color: {{ tenant_theme.primary }};
+          --bs-link-hover-color: {{ tenant_theme.secondary }};
+        }
+      </style>
+    {% endif %}
     {% block css %}{% endblock %}
 </head>
 
-<body class="bg-light">
+<body>
 
 <!-- Navbar -->
 {% include "partials/navbar.html" %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 900px;">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h1 class="h4 mb-1">{{ title }}</h1>
+      <div class="text-muted small">Guided setup: Address → Contact → Portfolio → Property → Unit → Lease</div>
+    </div>
+    <div class="btn-group btn-group-sm" role="group" aria-label="Wizard actions">
+      <a class="btn btn-sm btn-primary" href="{% url back_url %}">Back</a>
+      <a class="btn btn-sm btn-outline-secondary" href="{% url 'crm_dashboard' %}">Exit</a>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} mb-2" role="alert">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {% include "components/crud_model_form.html" with title="" form=form back_url="" cancel_url="" submit_text="Continue" %}
+</div>
+{% endblock %}
+

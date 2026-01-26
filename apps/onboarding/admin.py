@@ -6,11 +6,9 @@ from django.utils.html import format_html
 from apps.audits.admin_mixins import AdminAuditMixin
 from apps.audits.models import AuditStatus
 from apps.audits.services import audit_log
-
 from apps.onboarding.models import TenantRequest, TenantRequestStatus
-from apps.tenancy.models import Tenant, Domain, TenantStatus
+from apps.tenancy.models import Domain, Tenant, TenantStatus
 from apps.tenancy.services.onboarding import provision_tenant
-
 
 DEFAULT_BASE_DOMAIN = getattr(settings, "BASE_TENANT_DOMAIN", "horstenhomes.local")
 
@@ -112,7 +110,12 @@ class TenantRequestAdmin(AdminAuditMixin, admin.ModelAdmin):
 					request_id=str(tr.id),
 				)
 				
-				reset_payload = provision_tenant(tenant=tenant, admin_email=admin_email)
+				reset_payload = provision_tenant(
+					tenant=tenant,
+					admin_email=admin_email,
+					admin_first_name=(getattr(tr, "contact_first_name", "") or ""),
+					admin_last_name=(getattr(tr, "contact_last_name", "") or ""),
+				)
 				if reset_payload:
 					# Build a tenant-local set-password link (no email sending required).
 					host = request.get_host()  # e.g. admin.horstenhomes.local:8000
@@ -124,6 +127,9 @@ class TenantRequestAdmin(AdminAuditMixin, admin.ModelAdmin):
 						format_html("Set-password link for {}: <a href='{}'>{}</a>", admin_email, link, link),
 						level=messages.WARNING,
 					)
+					tr.provisioned_domain = domain
+					tr.reset_uidb64 = reset_payload.get("uidb64", "") or ""
+					tr.reset_token = reset_payload.get("token", "") or ""
 				
 				tenant.status = TenantStatus.ACTIVE
 				tenant.save(update_fields=["status"])
@@ -131,7 +137,7 @@ class TenantRequestAdmin(AdminAuditMixin, admin.ModelAdmin):
 				tr.status = TenantRequestStatus.PROVISIONED
 				tr.converted_tenant_schema = tenant.schema_name
 				tr.updated_at = timezone.now()
-				tr.save(update_fields=["status", "converted_tenant_schema", "updated_at"])
+				tr.save(update_fields=["status", "converted_tenant_schema", "provisioned_domain", "reset_uidb64", "reset_token", "updated_at"])
 				
 				audit_log(
 					action="onboarding.provision_completed",

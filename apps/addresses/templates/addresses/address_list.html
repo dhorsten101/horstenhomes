@@ -9,22 +9,25 @@
       <h1 class="h3 mb-0">Addresses</h1>
       <div class="text-muted small">Manage your saved addresses</div>
     </div>
-    <a class="btn btn-primary" href="{% url 'addresses:create' %}">
-      New address
-    </a>
+    <div class="btn-group" role="group" aria-label="Page actions">
+      <a class="btn btn-primary" href="{% url 'crm_dashboard' %}">Back</a>
+      <a class="btn btn-success" href="{% url 'addresses:create' %}">New address</a>
+    </div>
   </div>
 
-  <form class="row g-2 mb-3" method="get">
-    <div class="col-md-8">
+  <form class="row g-2 mb-3 align-items-center" method="get" style="max-width: 720px;">
+    <div class="col-12 col-md-8">
       <input class="form-control" name="q" value="{{ q }}" placeholder="Search label, street, city..." />
     </div>
-    <div class="col-md-4 d-flex gap-2">
-      <button class="btn btn-outline-secondary" type="submit">Search</button>
-      <a class="btn btn-outline-secondary" href="{% url 'addresses:list' %}">Clear</a>
+    <div class="col-12 col-md-auto">
+      <div class="btn-group" role="group" aria-label="Search actions">
+        <button class="btn btn-outline-secondary" type="submit">Search</button>
+        <a class="btn btn-outline-danger" href="{% url 'addresses:list' %}">Clear</a>
+      </div>
     </div>
   </form>
 
-  <div class="card">
+  <div class="card border-0">
     <div class="table-responsive">
       <table class="table table-striped mb-0 align-middle">
         <thead>
@@ -47,12 +50,10 @@
             </td>
             <td>{{ a.city|default:"—" }}</td>
             <td class="text-end">
-              <a class="btn btn-sm btn-outline-secondary" href="{% url 'addresses:update' a.pk %}">Edit</a>
-              <form method="post" action="{% url 'addresses:delete' a.pk %}" class="d-inline">
+              <a class="btn btn-sm btn-outline-warning" href="{% url 'addresses:update' a.pk %}">Edit</a>
+              <form method="post" action="{% url 'addresses:delete' a.pk %}" class="d-inline ms-1">
                 {% csrf_token %}
-                <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete this address?">
-                  Delete
-                </button>
+                <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete this address?">Delete</button>
               </form>
             </td>
           </tr>

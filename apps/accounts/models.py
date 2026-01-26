@@ -1,9 +1,10 @@
-from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericRelation
+from django.db import models
+from django.utils import timezone
 
 from apps.core.models import TimeStampedUUIDModel
+
 from .managers import UserManager
 
 

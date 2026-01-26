@@ -1,23 +1,28 @@
 from __future__ import annotations
 
-from typing import Callable
+import json
+import shutil
+import subprocess
+from collections.abc import Callable
+from pathlib import Path
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from apps.audits.models import AuditStatus
+from apps.audits.models import AuditEvent, AuditStatus
 from apps.audits.services import audit_log
-from apps.audits.models import AuditEvent
+from apps.entitlements.models import Plan, TenantPlan, TenantPlanStatus
+from apps.logs.metrics import get_system_metrics
+from apps.logs.models import LogEntry
 from apps.onboarding.models import TenantRequest, TenantRequestStatus
 from apps.tenancy.models import Domain, Tenant, TenantStatus
-from apps.tenancy.services.onboarding import provision_tenant, suspend_tenant, activate_tenant
-from apps.logs.models import LogEntry
-import subprocess
-import shutil
-from apps.logs.metrics import get_system_metrics
+from apps.tenancy.services.onboarding import activate_tenant, provision_tenant, suspend_tenant
+
+from . import services as platform_services
 
 try:
 	from django_tenants.utils import schema_context
@@ -39,6 +44,28 @@ def _public_schema_required(view: Callable[..., HttpResponse]):
 	return _wrapped
 
 
+TESTABLE_APP_LABELS: tuple[str, ...] = (
+	"apps.contacts",
+	"apps.addresses",
+	"apps.portfolio",
+	"apps.properties",
+	"apps.leases",
+	"apps.accounts",
+	"apps.tenancy",
+	"apps.audits",
+	"apps.logs",
+	"apps.activity",
+)
+
+
+def _list_test_files(app_label: str) -> list[str]:
+	"""
+	Best-effort list of test modules for UI display.
+	"""
+	base = Path(getattr(settings, "BASE_DIR", Path(".")))
+	return platform_services.list_test_files(app_label=app_label, base_dir=base)
+
+
 @staff_member_required
 @_public_schema_required
 def dashboard_view(request: HttpRequest) -> HttpResponse:
@@ -49,6 +76,169 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
 		"pending_requests": TenantRequest.objects.filter(status=TenantRequestStatus.NEW).count(),
 	}
 	return render(request, "platform/dashboard.html", ctx)
+
+
+@staff_member_required
+@_public_schema_required
+def entitlements_dashboard_view(request: HttpRequest) -> HttpResponse:
+	return render(request, "platform/entitlements_dashboard.html")
+
+
+@staff_member_required
+@_public_schema_required
+def plan_list_view(request: HttpRequest) -> HttpResponse:
+	plans = Plan.objects.order_by("code")
+	return render(request, "platform/plan_list.html", {"plans": plans})
+
+
+@staff_member_required
+@_public_schema_required
+def tenant_plan_list_view(request: HttpRequest) -> HttpResponse:
+	tenants = Tenant.objects.exclude(schema_name="public").order_by("slug")
+	plans = Plan.objects.filter(is_active=True).order_by("code")
+	tps = {tp.tenant_id: tp for tp in TenantPlan.objects.select_related("plan", "tenant")}
+	return render(request, "platform/tenant_plan_list.html", {"tenants": tenants, "plans": plans, "tps": tps})
+
+
+@staff_member_required
+@_public_schema_required
+def tenant_plan_set_view(request: HttpRequest, tenant_id: int) -> HttpResponse:
+	if request.method != "POST":
+		return HttpResponse(status=405)
+
+	tenant = get_object_or_404(Tenant, pk=tenant_id)
+	plan_id = int(request.POST.get("plan_id") or 0)
+	status = (request.POST.get("status") or TenantPlanStatus.ACTIVE).strip()
+	quota_overrides_raw = (request.POST.get("quota_overrides") or "").strip()
+	feature_overrides_raw = (request.POST.get("feature_overrides") or "").strip()
+
+	plan = get_object_or_404(Plan, pk=plan_id)
+
+	def parse_json(raw: str) -> dict:
+		if not raw:
+			return {}
+		return json.loads(raw)
+
+	try:
+		quota_overrides = parse_json(quota_overrides_raw)
+		feature_overrides = parse_json(feature_overrides_raw)
+	except Exception as e:
+		messages.error(request, f"Invalid JSON overrides: {e}")
+		return redirect("platform:tenant_plan_list")
+
+	tp, created = TenantPlan.objects.get_or_create(tenant=tenant, defaults={"plan": plan, "status": status})
+	tp.plan = plan
+	tp.status = status
+	tp.quota_overrides = quota_overrides
+	tp.feature_overrides = feature_overrides
+	tp.save()
+
+	audit_log(
+		action="entitlements.tenant_plan_set",
+		obj=tenant,
+		metadata={
+			"tenant": tenant.slug,
+			"plan": plan.code,
+			"status": status,
+			"created": created,
+		},
+		tenant_schema="public",
+	)
+	messages.success(request, f"Updated plan for {tenant.slug} -> {plan.code}")
+	return redirect("platform:tenant_plan_list")
+
+@staff_member_required
+@_public_schema_required
+def tests_view(request: HttpRequest) -> HttpResponse:
+	"""
+	Dev-only: Run Django tests from the Platform UI.
+
+	This is intentionally restricted because running tests can create/drop test DBs
+	and is not appropriate for production environments.
+	"""
+	if not settings.DEBUG:
+		raise Http404()
+
+	selected_app = ""
+	result = None
+
+	apps_ctx = [
+		{"label": lbl, "tests": _list_test_files(lbl)}
+		for lbl in TESTABLE_APP_LABELS
+	]
+
+	if request.method == "POST":
+		selected_app = (request.POST.get("app") or "").strip()
+		if selected_app not in TESTABLE_APP_LABELS:
+			return HttpResponse(status=400)
+
+		try:
+			tr = platform_services.run_django_tests(app_label=selected_app, timeout_s=600)
+			result = {
+				"app": tr.app,
+				"ok": tr.ok,
+				"returncode": tr.returncode,
+				"duration_ms": tr.duration_ms,
+				"output": tr.output,
+			}
+
+			audit_log(
+				action="tests.run",
+				obj=None,
+				status=AuditStatus.SUCCESS if tr.ok else AuditStatus.FAILURE,
+				message=f"Ran tests for {selected_app} (exit={tr.returncode})",
+				metadata={
+					"app": selected_app,
+					"returncode": tr.returncode,
+					"duration_ms": tr.duration_ms,
+				},
+				tenant_schema="public",
+			)
+
+			if tr.ok:
+				messages.success(request, f"Tests passed: {selected_app}")
+			else:
+				messages.error(request, f"Tests failed: {selected_app} (exit {tr.returncode})")
+		except subprocess.TimeoutExpired:
+			result = {
+				"app": selected_app,
+				"ok": False,
+				"returncode": -1,
+				"duration_ms": 0,
+				"output": "Timed out running tests.",
+			}
+			audit_log(
+				action="tests.run",
+				obj=None,
+				status=AuditStatus.FAILURE,
+				message=f"Timed out running tests for {selected_app}",
+				metadata={"app": selected_app, "duration_ms": 0},
+				tenant_schema="public",
+			)
+			messages.error(request, f"Timed out: {selected_app}")
+		except Exception as e:
+			result = {
+				"app": selected_app,
+				"ok": False,
+				"returncode": -1,
+				"duration_ms": 0,
+				"output": f"{type(e).__name__}: {e}",
+			}
+			audit_log(
+				action="tests.run",
+				obj=None,
+				status=AuditStatus.FAILURE,
+				message=f"Error running tests for {selected_app}: {e}",
+				metadata={"app": selected_app, "duration_ms": 0},
+				tenant_schema="public",
+			)
+			messages.error(request, f"Error running tests: {selected_app}")
+
+	return render(
+		request,
+		"platform/tests.html",
+		{"apps": apps_ctx, "selected_app": selected_app, "result": result},
+	)
 
 
 @staff_member_required
@@ -132,15 +322,24 @@ def tenant_request_approve_provision_view(request: HttpRequest, pk: int) -> Http
 			request_id=str(tr.id),
 		)
 
-		reset_payload = provision_tenant(tenant=tenant, admin_email=admin_email)
+		reset_payload = provision_tenant(
+			tenant=tenant,
+			admin_email=admin_email,
+			admin_first_name=(getattr(tr, "contact_first_name", "") or ""),
+			admin_last_name=(getattr(tr, "contact_last_name", "") or ""),
+		)
 
 		tenant.status = TenantStatus.ACTIVE
 		tenant.save(update_fields=["status"])
 
 		tr.status = TenantRequestStatus.PROVISIONED
 		tr.converted_tenant_schema = tenant.schema_name
+		tr.provisioned_domain = domain
+		if reset_payload:
+			tr.reset_uidb64 = reset_payload.get("uidb64", "") or ""
+			tr.reset_token = reset_payload.get("token", "") or ""
 		tr.updated_at = timezone.now()
-		tr.save(update_fields=["status", "converted_tenant_schema", "updated_at"])
+		tr.save(update_fields=["status", "converted_tenant_schema", "provisioned_domain", "reset_uidb64", "reset_token", "updated_at"])
 
 		audit_log(
 			action="onboarding.provision_completed",
@@ -157,8 +356,16 @@ def tenant_request_approve_provision_view(request: HttpRequest, pk: int) -> Http
 			host = request.get_host()  # e.g. admin.horstenhomes.local:8000
 			port = host.split(":", 1)[1] if ":" in host else ""
 			tenant_host = f"{domain}:{port}" if port else domain
+			login_link = f"http://{tenant_host}/login/"
 			link = f"http://{tenant_host}/reset/{reset_payload['uidb64']}/{reset_payload['token']}/"
+			messages.info(request, f"Tenant login: {login_link}")
 			messages.warning(request, f"Set-password link for {admin_email}: {link}")
+		else:
+			# If the admin user already had a password, still show the correct login URL.
+			host = request.get_host()
+			port = host.split(":", 1)[1] if ":" in host else ""
+			tenant_host = f"{domain}:{port}" if port else domain
+			messages.info(request, f"Tenant login: http://{tenant_host}/login/")
 
 	except Exception as e:
 		tenant.status = TenantStatus.FAILED
@@ -217,6 +424,40 @@ def tenant_request_delete_view(request: HttpRequest, pk: int) -> HttpResponse:
 def tenant_list_view(request: HttpRequest) -> HttpResponse:
 	qs = Tenant.objects.order_by("-created_at")
 	return render(request, "platform/tenant_list.html", {"tenants": qs})
+
+
+@staff_member_required
+@_public_schema_required
+def tenant_switch_view(request: HttpRequest) -> HttpResponse:
+	"""
+	Convenience page: quickly jump from public control-plane to tenant hosts.
+
+	This does NOT bypass authentication — tenant users are tenant-local.
+	It simply builds correct tenant URLs (including dev port) so you can switch fast.
+	"""
+	q = (request.GET.get("q") or "").strip().lower()
+
+	tenants_qs = Tenant.objects.exclude(schema_name="public").order_by("slug")
+	if q:
+		tenants_qs = tenants_qs.filter(slug__icontains=q) | tenants_qs.filter(name__icontains=q)
+
+	tenants = list(tenants_qs)
+	tenant_ids = [t.id for t in tenants]
+	primary_domains = {
+		d.tenant_id: d.domain
+		for d in Domain.objects.filter(tenant_id__in=tenant_ids, is_primary=True).only("tenant_id", "domain")
+	}
+
+	base_domain = getattr(settings, "BASE_TENANT_DOMAIN", "horstenhomes.local")
+	rows = platform_services.build_tenant_switch_rows(
+		tenants=tenants,
+		primary_domains=primary_domains,
+		request_host=request.get_host(),
+		request_scheme=request.scheme,
+		base_domain=base_domain,
+	)
+
+	return render(request, "platform/tenant_switch.html", {"rows": rows, "q": q})
 
 
 @staff_member_required
@@ -458,4 +699,47 @@ def system_logs_view(request: HttpRequest) -> HttpResponse:
 def metrics_view(request: HttpRequest) -> HttpResponse:
 	m = get_system_metrics()
 	return render(request, "platform/metrics.html", {"m": m})
+
+
+@staff_member_required
+@_public_schema_required
+def db_view(request: HttpRequest) -> HttpResponse:
+	"""
+	Lightweight "DB insights" page powered by `pg_stat_statements`.
+
+	Notes:
+	- This is cluster-wide, not schema-per-tenant. We provide a best-effort
+	  schema filter by matching SQL text (useful when queries include schema-qualified tables).
+	"""
+	limit = min(int(request.GET.get("limit") or 50), 200)
+	schema_filter = (request.GET.get("schema_filter") or "").strip()
+	error = ""
+
+	try:
+		top_total, top_mean, top_calls = platform_services.get_pg_stat_statements(limit=limit, schema_filter=schema_filter)
+	except Exception as e:
+		top_total = []
+		top_mean = []
+		top_calls = []
+		error = f"{type(e).__name__}: {e}"
+
+	# Populate schema choices from public schema (for filtering convenience).
+	schemas: list[str] = []
+	if schema_context is not None:
+		with schema_context("public"):
+			schemas = list(Tenant.objects.exclude(schema_name="public").values_list("schema_name", flat=True))
+
+	return render(
+		request,
+		"platform/db.html",
+		{
+			"limit": limit,
+			"schema_filter": schema_filter,
+			"schemas": schemas,
+			"error": error,
+			"top_total": top_total,
+			"top_mean": top_mean,
+			"top_calls": top_calls,
+		},
+	)
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from django.db import transaction
 
@@ -22,17 +22,17 @@ def _obj_meta(obj) -> tuple[str, str, str]:
 def audit_log(
 		*,
 		action: str,
-		obj: Optional[Any] = None,
+		obj: Any | None = None,
 		status: str = AuditStatus.SUCCESS,
 		message: str = "",
-		changes: Optional[dict] = None,
-		metadata: Optional[dict] = None,
+		changes: dict | None = None,
+		metadata: dict | None = None,
 		# Overrides (system jobs, provisioning)
 		actor_user_id: str = "",
 		actor_email: str = "",
 		tenant_schema: str = "",
 		request_id: str = "",
-		ip_address: Optional[str] = None,
+		ip_address: str | None = None,
 		user_agent: str = "",
 		# If True (default), write after transaction commit. If False, write immediately.
 		defer: bool = True,

@@ -1,8 +1,10 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, include
 from django.contrib.auth import views as auth_views
-from django.urls import reverse_lazy
-from apps.accounts.views import DevPasswordResetView, DevPasswordResetDoneView
+from django.urls import include, path, reverse_lazy
+
+from apps.accounts.views import DevPasswordResetDoneView, DevPasswordResetView, tenant_aware_login_view
 
 urlpatterns = [
     # Public marketing site (public schema)
@@ -20,6 +22,9 @@ urlpatterns = [
     path("crm/portfolios/", include(("apps.portfolio.urls", "portfolio"), namespace="portfolio")),
     path("crm/properties/", include(("apps.properties.urls", "properties"), namespace="properties")),
     path("crm/leases/", include(("apps.leases.urls", "leases"), namespace="leases")),
+    path("crm/documents/", include(("apps.documents.urls", "documents"), namespace="documents")),
+    path("crm/todo/", include(("apps.todo.urls", "todo"), namespace="todo")),
+    path("crm/branding/", include(("apps.branding.urls", "branding"), namespace="branding")),
     
     path("", include("apps.audits.urls")),
     
@@ -29,8 +34,10 @@ urlpatterns = [
     # Client/runtime logging endpoints (tenant-local and public)
     path("logs/", include("apps.logs.urls")),
 
-    # Auth (tenant-local; will also work on public schema if needed)
-    path("login/", auth_views.LoginView.as_view(template_name="auth/login.html"), name="login"),
+    # Auth
+    # - public schema: tenant locator (redirects to tenant host)
+    # - tenant schema: normal login form
+    path("login/", tenant_aware_login_view, name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path(
         "password-reset/",
@@ -73,3 +80,6 @@ urlpatterns = [
     path("platform/", include("apps.platform.urls")),
     
 ]
+
+if settings.DEBUG:
+	urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

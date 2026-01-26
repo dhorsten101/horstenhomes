@@ -4,68 +4,95 @@
 
 {% block content %}
 <div class="container py-4">
-  <div class="mb-3">
-    <h1 class="h3 mb-0">CRM</h1>
-    <div class="text-muted small">Portfolio → Property → Unit → Lease</div>
+  <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+    <div>
+      <h1 class="h3 mb-0">Dashboard</h1>
+      <div class="text-muted small">Portfolio → Property → Unit → Lease</div>
+    </div>
+    <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 gap-sm-3 flex-shrink-0">
+      <div class="text-sm-end">
+        <div class="fw-semibold small">New here?</div>
+        <div class="small text-muted">Run the guided setup wizard.</div>
+      </div>
+      <a class="btn btn-sm btn-success" href="{% url 'crm_wizard_start' %}">Start wizard</a>
+    </div>
   </div>
 
   <div class="row g-3">
     <div class="col-md-6 col-lg-4">
-      <div class="card h-100">
+      <div class="card h-100 position-relative">
         <div class="card-body">
-          <h2 class="h5">Portfolios</h2>
+          <div class="d-flex align-items-baseline justify-content-between">
+            <h2 class="h5 mb-0">Portfolios</h2>
+            <span class="badge text-bg-secondary">{{ totals.portfolios|default:0 }}</span>
+          </div>
           <p class="text-muted small mb-3">Group properties by owner/investment.</p>
-          <a class="btn btn-primary" href="{% url 'portfolio:list' %}">Open</a>
+          <a class="stretched-link" href="{% url 'portfolio:list' %}" aria-label="Open portfolios"></a>
         </div>
       </div>
     </div>
 
     <div class="col-md-6 col-lg-4">
-      <div class="card h-100">
+      <div class="card h-100 position-relative">
         <div class="card-body">
-          <h2 class="h5">Properties</h2>
+          <div class="d-flex align-items-baseline justify-content-between">
+            <h2 class="h5 mb-0">Properties</h2>
+            <span class="badge text-bg-secondary">{{ totals.properties|default:0 }}</span>
+          </div>
           <p class="text-muted small mb-3">Manage properties and their units.</p>
-          <a class="btn btn-primary" href="{% url 'properties:property_list' %}">Open</a>
+          <a class="stretched-link" href="{% url 'properties:property_list' %}" aria-label="Open properties"></a>
         </div>
       </div>
     </div>
 
     <div class="col-md-6 col-lg-4">
-      <div class="card h-100">
+      <div class="card h-100 position-relative">
         <div class="card-body">
-          <h2 class="h5">Units</h2>
+          <div class="d-flex align-items-baseline justify-content-between">
+            <h2 class="h5 mb-0">Units</h2>
+            <span class="badge text-bg-secondary">{{ totals.units|default:0 }}</span>
+          </div>
           <p class="text-muted small mb-3">All units across properties.</p>
-          <a class="btn btn-primary" href="{% url 'properties:unit_list' %}">Open</a>
+          <a class="stretched-link" href="{% url 'properties:unit_list' %}" aria-label="Open units"></a>
         </div>
       </div>
     </div>
 
     <div class="col-md-6 col-lg-4">
-      <div class="card h-100">
+      <div class="card h-100 position-relative">
         <div class="card-body">
-          <h2 class="h5">Leases</h2>
+          <div class="d-flex align-items-baseline justify-content-between">
+            <h2 class="h5 mb-0">Leases</h2>
+            <span class="badge text-bg-secondary">{{ totals.leases|default:0 }}</span>
+          </div>
           <p class="text-muted small mb-3">Tenancies and agreements.</p>
-          <a class="btn btn-primary" href="{% url 'leases:list' %}">Open</a>
+          <a class="stretched-link" href="{% url 'leases:list' %}" aria-label="Open leases"></a>
         </div>
       </div>
     </div>
 
     <div class="col-md-6 col-lg-4">
-      <div class="card h-100">
+      <div class="card h-100 position-relative">
         <div class="card-body">
-          <h2 class="h5">Contacts</h2>
+          <div class="d-flex align-items-baseline justify-content-between">
+            <h2 class="h5 mb-0">Contacts</h2>
+            <span class="badge text-bg-secondary">{{ totals.contacts|default:0 }}</span>
+          </div>
           <p class="text-muted small mb-3">Owners, tenants, vendors.</p>
-          <a class="btn btn-primary" href="{% url 'contacts:list' %}">Open</a>
+          <a class="stretched-link" href="{% url 'contacts:list' %}" aria-label="Open contacts"></a>
         </div>
       </div>
     </div>
 
     <div class="col-md-6 col-lg-4">
-      <div class="card h-100">
+      <div class="card h-100 position-relative">
         <div class="card-body">
-          <h2 class="h5">Addresses</h2>
+          <div class="d-flex align-items-baseline justify-content-between">
+            <h2 class="h5 mb-0">Addresses</h2>
+            <span class="badge text-bg-secondary">{{ totals.addresses|default:0 }}</span>
+          </div>
           <p class="text-muted small mb-3">Reusable address records.</p>
-          <a class="btn btn-primary" href="{% url 'addresses:list' %}">Open</a>
+          <a class="stretched-link" href="{% url 'addresses:list' %}" aria-label="Open addresses"></a>
         </div>
       </div>
     </div>

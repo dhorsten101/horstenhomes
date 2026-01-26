@@ -1,5 +1,5 @@
-from django.core.management.base import BaseCommand
 from django.core.exceptions import ValidationError
+from django.core.management.base import BaseCommand
 
 from apps.tenancy.services.onboarding import create_tenant_record, provision_tenant
 

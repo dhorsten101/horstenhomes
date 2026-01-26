@@ -1,8 +1,13 @@
 {% load static %}
+{% load user_extras %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid">
     <a class="navbar-brand" href="/">
-      <img src="{% static 'img/logo.png' %}" alt="Horsten Homes" height="34" class="d-inline-block align-text-top">
+      {% if request.tenant and request.tenant.schema_name != "public" and tenant_branding and tenant_branding.logo %}
+        <img src="{{ tenant_branding.logo.url }}" alt="Tenant logo" height="34" class="d-inline-block align-text-top">
+      {% else %}
+        <img src="{% static 'img/logo.png' %}" alt="Horsten Homes" height="34" class="d-inline-block align-text-top">
+      {% endif %}
     </a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -15,74 +20,167 @@
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         {% if user.is_authenticated %}
 
-          <li class="nav-item dropdown">
-            <a
-              class="nav-link dropdown-toggle"
-              href="{% url 'crm_dashboard' %}"
-              role="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              CRM
-            </a>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="{% url 'crm_dashboard' %}">Dashboard</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="{% url 'portfolio:list' %}">Portfolios</a></li>
-              <li><a class="dropdown-item" href="{% url 'properties:property_list' %}">Properties</a></li>
-              <li><a class="dropdown-item" href="{% url 'properties:unit_list' %}">Units</a></li>
-              <li><a class="dropdown-item" href="{% url 'leases:list' %}">Leases</a></li>
-              <li><a class="dropdown-item" href="{% url 'contacts:list' %}">Contacts</a></li>
-              <li><a class="dropdown-item" href="{% url 'addresses:list' %}">Addresses</a></li>
-            </ul>
-          </li>
+          {# Tenant-only CRM navigation: hide on public schema (www/admin host) #}
+          {% if request.tenant and request.tenant.schema_name != "public" %}
+            {# CRM is always a simple link (no dropdown) #}
+{#            <li class="nav-item">#}
+{#              <a class="nav-link" href="{% url 'crm_dashboard' %}">Dash</a>#}
+{#            </li>#}
+              <li class="nav-item">
+                  <a class="nav-link" href="{% url 'portfolio:list' %}">Portfolio</a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link" href="{% url 'properties:property_list' %}">Property</a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link" href="{% url 'properties:unit_list' %}">Units</a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link" href="{% url 'contacts:list' %}">Contacts</a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link" href="{% url 'leases:list' %}">Leases</a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link" href="{% url 'documents:list' %}">Documents</a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link" href="{% url 'todo:list' %}">Todo</a>
+              </li>
+              {% if user.is_staff %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'branding:edit' %}">Branding</a>
+                </li>
+              {% endif %}
+
+            {% if user.is_staff %}
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'accounts:user_list' %}">Users</a>
+              </li>
+            {% endif %}
+          {% endif %}
 
           {% if user.is_staff %}
-            <li class="nav-item">
-              <a class="nav-link" href="/platform/">Platform</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/platform/logs/">Logs</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/platform/audits/">Audits</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/platform/alerts/">Alerts</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/platform/metrics/">Metrics</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/admin/">Admin</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/pricing/">Pricing</a>
-            </li>
+            {# Public control-plane links (only on public schema) #}
+            {% if request.tenant and request.tenant.schema_name == "public" %}
+              <li class="nav-item">
+                <a class="nav-link" href="/platform/">Platform</a>
+              </li>
+            
+              <li class="nav-item">
+                <a class="nav-link" href="/platform/logs/">Logs</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/platform/audits/">Audits</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/platform/alerts/">Alerts</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/platform/metrics/">Metrics</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/pricing/">Pricing</a>
+              </li>
+            {% endif %}
+
+            {# Django admin: public superuser only #}
+            {% if request.tenant and request.tenant.schema_name == "public" and user.is_superuser %}
+              <li class="nav-item">
+                <a class="nav-link" href="/admin/">Admin</a>
+              </li>
+            {% endif %}
           {% endif %}
         {% endif %}
       </ul>
-
+   
       <ul class="navbar-nav ms-auto">
         {% if user.is_authenticated %}
-          <li class="nav-item">
-            <span class="navbar-text me-3">
-              {{ user.email }}
-            </span>
+        {% if user.is_staff and request.tenant and request.tenant.schema_name == "public" %}
+          <li class="nav-item me-4">
+            <a class="nav-link" href="{% url 'platform:tenant_switch' %}">Switch tenant</a>
           </li>
-          <li class="nav-item">
-            <form method="post" action="/logout/" class="d-inline">
-              {% csrf_token %}
+        {% endif %}
+          <li class="nav-item dropdown">
+            {% if user.contact and user.contact.display_name %}
+              {% with display_name=user.contact.display_name %}
+                <button
+                  class="btn p-0 border-0 bg-transparent dropdown-toggle"
+                  type="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                  aria-label="{{ display_name }}"
+                  title="{{ display_name }}"
+                >
+                  <span class="hh-avatar">{{ display_name|initials }}</span>
+                </button>
+              {% endwith %}
+            {% else %}
               <button
-                type="submit"
-                class="nav-link btn btn-link p-0 d-flex align-items-center"
-                style="text-decoration: none;"
-                aria-label="Log out"
+                class="btn p-0 border-0 bg-transparent dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                aria-label="{{ user.email }}"
+                title="{{ user.email }}"
               >
-                <i class="bi bi-box-arrow-right fs-5" aria-hidden="true"></i>
-                <span class="visually-hidden">Log out</span>
+                <span class="hh-avatar">{{ user.email|initials }}</span>
               </button>
-            </form>
+            {% endif %}
+            
+
+            <ul class="dropdown-menu dropdown-menu-end">
+              
+              <li>
+                <a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                  <i class="bi bi-person me-2" aria-hidden="true"></i>
+                  Profile
+                </a>
+              </li>
+
+              {% if request.tenant and request.tenant.schema_name != "public" %}
+                <li><hr class="dropdown-divider"></li>
+                <li class="dropdown-header">Theme</li>
+                <li>
+                  <form method="post" action="{% url 'branding:theme_select' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="theme_key" value="theme1">
+                    <button class="dropdown-item" type="submit">
+                      {% if tenant_theme_key == 'theme1' %}✓ {% endif %}Theme 1
+                    </button>
+                  </form>
+                </li>
+                <li>
+                  <form method="post" action="{% url 'branding:theme_select' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="theme_key" value="theme2">
+                    <button class="dropdown-item" type="submit">
+                      {% if tenant_theme_key == 'theme2' %}✓ {% endif %}Theme 2
+                    </button>
+                  </form>
+                </li>
+                <li>
+                  <form method="post" action="{% url 'branding:theme_select' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="theme_key" value="theme3">
+                    <button class="dropdown-item" type="submit">
+                      {% if tenant_theme_key == 'theme3' %}✓ {% endif %}Theme 3
+                    </button>
+                  </form>
+                </li>
+              {% endif %}
+
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form method="post" action="/logout/" class="d-inline">
+                  {% csrf_token %}
+                  <button class="dropdown-item" type="submit">
+                    <i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>
+                    Log out
+                  </button>
+                </form>
+              </li>
+            </ul>
           </li>
         {% else %}
           <li class="nav-item">

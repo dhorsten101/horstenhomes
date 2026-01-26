@@ -1,5 +1,4 @@
 import os
-
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -42,6 +41,13 @@ SHARED_APPS = (
 	"apps.audits.apps.AuditsConfig",
 	"apps.logs.apps.LogsConfig",
 	"apps.activity.apps.ActivityConfig",
+	"apps.entitlements.apps.EntitlementsConfig",
+	
+	# Shared data models required by AUTH_USER_MODEL and admin on public schema
+	"apps.core",
+	"apps.addresses",
+	"apps.contacts",
+	"apps.accounts",
 
 	# Public control-plane apps (only these should live in public)
 	"apps.tenancy",  # Tenant + Domain
@@ -74,6 +80,9 @@ TENANT_APPS = (
 	"apps.portfolio",
 	"apps.properties",
 	"apps.leases",
+	"apps.documents",
+	"apps.todo",
+	"apps.branding",
 	"apps.web",
 )
 
@@ -116,6 +125,32 @@ LOGIN_REDIRECT_URL = "/accounts/profile/"
 LOGOUT_REDIRECT_URL = "/login/"
 
 # -------------------------------------------------
+# Sentry (optional)
+# -------------------------------------------------
+SENTRY_DSN = os.environ.get("SENTRY_DSN", "").strip()
+if SENTRY_DSN:
+	try:
+		import sentry_sdk
+		from sentry_sdk.integrations.django import DjangoIntegration
+		from sentry_sdk.integrations.logging import LoggingIntegration
+
+		# - breadcrumbs: keep lightweight context (INFO+)
+		# - events: forward errors (ERROR+)
+		sentry_logging = LoggingIntegration(level="INFO", event_level="ERROR")
+
+		sentry_sdk.init(
+			dsn=SENTRY_DSN,
+			integrations=[DjangoIntegration(), sentry_logging],
+			environment=os.environ.get("SENTRY_ENVIRONMENT", "local"),
+			send_default_pii=False,
+			# Start low; tune per environment.
+			traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
+		)
+	except Exception:
+		# Never block app startup because of Sentry.
+		pass
+
+# -------------------------------------------------
 # Middleware (ORDER MATTERS)
 # -------------------------------------------------
 MIDDLEWARE = [
@@ -127,18 +162,46 @@ MIDDLEWARE = [
 	
 	
 	"apps.tenancy.middleware.TenantStatusMiddleware",
+	"apps.entitlements.middleware.ApiQuotaMiddleware",
 	
 	"django.contrib.sessions.middleware.SessionMiddleware",
 	"django.middleware.common.CommonMiddleware",
 	"django.middleware.csrf.CsrfViewMiddleware",
 	"django.contrib.auth.middleware.AuthenticationMiddleware",
 	"django.contrib.messages.middleware.MessageMiddleware",
+	# Guard Django admin access (public superuser-only; disabled on tenant schemas)
+	"apps.core.middleware.AdminPortalGuardMiddleware",
 	"django.middleware.clickjacking.XFrameOptionsMiddleware",
 	# Performance + DB slow query alerts
 	"apps.logs.middleware.PerformanceAlertMiddleware",
 	# Persist unhandled exceptions as alerts
 	"apps.logs.middleware.ExceptionAlertMiddleware",
 ]
+
+# -------------------------------------------------
+# Entitlements / quotas (soft -> hard enforcement)
+# -------------------------------------------------
+# - "soft": allow but log/audit quota violations
+# - "hard": raise ValidationError on violations (blocking writes)
+ENTITLEMENTS_ENFORCEMENT = os.environ.get("ENTITLEMENTS_ENFORCEMENT", "soft").strip().lower()
+
+# -------------------------------------------------
+# Celery (async jobs)
+# -------------------------------------------------
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://hh-redis:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://hh-redis:6379/1")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TASK_ALWAYS_EAGER = os.environ.get("CELERY_TASK_ALWAYS_EAGER", "0") in ("1", "true", "True")
+
+CELERY_BEAT_SCHEDULE = {
+	"audit.purge.daily": {
+		"task": "apps.logs.tasks.purge_audit_events_task",
+		"schedule": 60 * 60 * 24,
+		"args": (90,),
+	},
+}
 
 # -------------------------------------------------
 # URLs / WSGI
@@ -159,6 +222,7 @@ TEMPLATES = [
 				"django.template.context_processors.request",
 				"django.contrib.auth.context_processors.auth",
 				"django.contrib.messages.context_processors.messages",
+				"apps.branding.context_processors.tenant_branding",
 			],
 		},
 	},
@@ -178,6 +242,12 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# -------------------------------------------------
+# Media uploads (Documents, etc.)
+# -------------------------------------------------
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

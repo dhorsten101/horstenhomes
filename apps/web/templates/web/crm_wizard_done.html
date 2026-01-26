@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Setup complete{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 900px;">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h1 class="h4 mb-1">Setup complete</h1>
+      <div class="text-muted small">Your first CRM records are ready.</div>
+    </div>
+    <a class="btn btn-sm btn-primary" href="{% url 'crm_dashboard' %}">Back to dashboard</a>
+  </div>
+
+  <div class="row g-3">
+    {% if address %}
+      <div class="col-12 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted small">Address</div>
+            <div class="fw-semibold">{{ address }}</div>
+            <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'addresses:detail' address.id %}">View</a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+    {% if contact %}
+      <div class="col-12 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted small">Contact</div>
+            <div class="fw-semibold">{{ contact }}</div>
+            <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'contacts:detail' contact.id %}">View</a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+    {% if portfolio %}
+      <div class="col-12 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted small">Portfolio</div>
+            <div class="fw-semibold">{{ portfolio }}</div>
+            <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'portfolio:detail' portfolio.id %}">View</a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+    {% if property %}
+      <div class="col-12 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted small">Property</div>
+            <div class="fw-semibold">{{ property }}</div>
+            <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'properties:property_detail' property.id %}">View</a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+    {% if unit %}
+      <div class="col-12 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted small">Unit</div>
+            <div class="fw-semibold">{{ unit }}</div>
+            <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'properties:unit_detail' unit.id %}">View</a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+    {% if lease %}
+      <div class="col-12 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <div class="text-muted small">Lease</div>
+            <div class="fw-semibold">{{ lease }}</div>
+            <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'leases:detail' lease.id %}">View</a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="mt-4">
+    <a class="btn btn-outline-secondary" href="{% url 'crm_wizard_start' %}" data-confirm="Start the wizard again?">Run again</a>
+  </div>
+</div>
+{% endblock %}
+

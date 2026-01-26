@@ -15,6 +15,3 @@ class UnitAdmin(admin.ModelAdmin):
 	list_display = ("unit_number", "property", "status", "updated_at")
 	list_filter = ("status", "property")
 	search_fields = ("unit_number", "external_id", "property__name")
-from django.contrib import admin
-
-# Register your models here.
