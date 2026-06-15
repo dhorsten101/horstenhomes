@@ -1,0 +1,9 @@
+{% if accounting_chart %}
+  {% include "dashboards/includes/pnl_chart_legend_cumulative.html" %}
+  <div class="crm-chart-wrap">
+    <canvas id="{{ chart_canvas_id }}" aria-label="Running totals chart"></canvas>
+  </div>
+  {{ accounting_chart|json_script:chart_data_id }}
+{% else %}
+  <p class="text-muted small mb-0">No accounting activity yet.</p>
+{% endif %}

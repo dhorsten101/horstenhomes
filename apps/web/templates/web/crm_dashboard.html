@@ -1,102 +1,51 @@
 {% extends "base.html" %}
+{% load money_extras %}
 
 {% block title %}CRM{% endblock %}
 
+{% block body_class %} class="crm-dashboard-page"{% endblock %}
+
 {% block content %}
-<div class="container py-4">
-  <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+<div class="crm-page crm-dashboard">
+  <div class="crm-dashboard__toolbar mb-3">
     <div>
-      <h1 class="h3 mb-0">Dashboard</h1>
-      <div class="text-muted small">Portfolio → Property → Unit → Lease</div>
+      <h1 class="crm-page-title h4 mb-0">Dashboard</h1>
+      {% if selected_year %}
+        <p class="text-muted small mb-0">Profit &amp; loss for {{ selected_year }}</p>
+      {% else %}
+        <p class="text-muted small mb-0">Profit &amp; loss across all years</p>
+      {% endif %}
     </div>
-    <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2 gap-sm-3 flex-shrink-0">
-      <div class="text-sm-end">
-        <div class="fw-semibold small">New here?</div>
-        <div class="small text-muted">Run the guided setup wizard.</div>
-      </div>
-      <a class="btn btn-sm btn-success" href="{% url 'crm_wizard_start' %}">Start wizard</a>
-    </div>
-  </div>
-
-  <div class="row g-3">
-    <div class="col-md-6 col-lg-4">
-      <div class="card h-100 position-relative">
-        <div class="card-body">
-          <div class="d-flex align-items-baseline justify-content-between">
-            <h2 class="h5 mb-0">Portfolios</h2>
-            <span class="badge text-bg-secondary">{{ totals.portfolios|default:0 }}</span>
-          </div>
-          <p class="text-muted small mb-3">Group properties by owner/investment.</p>
-          <a class="stretched-link" href="{% url 'portfolio:list' %}" aria-label="Open portfolios"></a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-6 col-lg-4">
-      <div class="card h-100 position-relative">
-        <div class="card-body">
-          <div class="d-flex align-items-baseline justify-content-between">
-            <h2 class="h5 mb-0">Properties</h2>
-            <span class="badge text-bg-secondary">{{ totals.properties|default:0 }}</span>
-          </div>
-          <p class="text-muted small mb-3">Manage properties and their units.</p>
-          <a class="stretched-link" href="{% url 'properties:property_list' %}" aria-label="Open properties"></a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-6 col-lg-4">
-      <div class="card h-100 position-relative">
-        <div class="card-body">
-          <div class="d-flex align-items-baseline justify-content-between">
-            <h2 class="h5 mb-0">Units</h2>
-            <span class="badge text-bg-secondary">{{ totals.units|default:0 }}</span>
-          </div>
-          <p class="text-muted small mb-3">All units across properties.</p>
-          <a class="stretched-link" href="{% url 'properties:unit_list' %}" aria-label="Open units"></a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-6 col-lg-4">
-      <div class="card h-100 position-relative">
-        <div class="card-body">
-          <div class="d-flex align-items-baseline justify-content-between">
-            <h2 class="h5 mb-0">Leases</h2>
-            <span class="badge text-bg-secondary">{{ totals.leases|default:0 }}</span>
-          </div>
-          <p class="text-muted small mb-3">Tenancies and agreements.</p>
-          <a class="stretched-link" href="{% url 'leases:list' %}" aria-label="Open leases"></a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-6 col-lg-4">
-      <div class="card h-100 position-relative">
-        <div class="card-body">
-          <div class="d-flex align-items-baseline justify-content-between">
-            <h2 class="h5 mb-0">Contacts</h2>
-            <span class="badge text-bg-secondary">{{ totals.contacts|default:0 }}</span>
-          </div>
-          <p class="text-muted small mb-3">Owners, tenants, vendors.</p>
-          <a class="stretched-link" href="{% url 'contacts:list' %}" aria-label="Open contacts"></a>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-6 col-lg-4">
-      <div class="card h-100 position-relative">
-        <div class="card-body">
-          <div class="d-flex align-items-baseline justify-content-between">
-            <h2 class="h5 mb-0">Addresses</h2>
-            <span class="badge text-bg-secondary">{{ totals.addresses|default:0 }}</span>
-          </div>
-          <p class="text-muted small mb-3">Reusable address records.</p>
-          <a class="stretched-link" href="{% url 'addresses:list' %}" aria-label="Open addresses"></a>
-        </div>
-      </div>
+    <div class="crm-dashboard__toolbar-actions d-flex flex-wrap align-items-center gap-2">
+      {% include "dashboards/includes/pnl_year_filter.html" %}
+      <a class="btn btn-success btn-sm flex-shrink-0" href="{% url 'crm_wizard_start' %}">
+        <i class="bi bi-magic me-1" aria-hidden="true"></i>Start wizard
+      </a>
     </div>
   </div>
+
+  {% include "web/includes/crm_dashboard_stats.html" %}
+  {% include "web/includes/crm_dashboard_top_performers.html" %}
+
+  {% if monthly_pnl_chart or cumulative_pnl_chart %}
+  <div class="row g-3 crm-dashboard__charts">
+    {% if monthly_pnl_chart %}
+    <div class="col-lg-6">
+      {% include "dashboards/includes/pnl_monthly_bar_block.html" with chart_canvas_id="crm-dashboard-monthly-pnl-chart" chart_data_id="crm-dashboard-monthly-pnl-chart-data" compact=True %}
+    </div>
+    {% endif %}
+    {% if cumulative_pnl_chart %}
+    <div class="col-lg-6">
+      {% include "dashboards/includes/pnl_cumulative_chart_block.html" with chart_canvas_id="crm-dashboard-cumulative-pnl-chart" chart_data_id="crm-dashboard-cumulative-pnl-chart-data" compact=True %}
+    </div>
+    {% endif %}
+  </div>
+  {% else %}
+  <p class="text-muted small mb-0">No accounting activity{% if selected_year %} in {{ selected_year }}{% endif %} yet.</p>
+  {% endif %}
 </div>
 {% endblock %}
 
+{% block js %}
+{% include "dashboards/includes/pnl_charts_js.html" with chart_prefix="crm-dashboard" %}
+{% endblock %}

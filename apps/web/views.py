@@ -1,15 +1,23 @@
+from __future__ import annotations
+
 from django.contrib import messages
 from django.contrib.auth.views import redirect_to_login
 from django.shortcuts import get_object_or_404, redirect, render
 
+from apps.accounting.services import (
+	pnl_charts_context,
+	scoped_top_performers_context,
+)
 from apps.addresses.forms import AddressForm
 from apps.addresses.models import Address
 from apps.contacts.forms import ContactForm
 from apps.contacts.models import Contact
 from apps.leases.forms import LeaseForm
 from apps.leases.models import Lease
+from apps.leases.services import EXPIRING_LEASE_DAYS, crm_occupancy_stats
 from apps.portfolio.forms import PortfolioForm
 from apps.portfolio.models import Portfolio
+from apps.portfolio.services import total_asset_value
 from apps.properties.forms import PropertyForm, UnitForm
 from apps.properties.models import Property, Unit
 
@@ -37,15 +45,16 @@ def crm_dashboard_view(request):
 	if not request.user.is_authenticated:
 		return redirect_to_login(request.get_full_path())
 
+	units = Unit.objects.all()
+	occupancy = crm_occupancy_stats()
 	ctx = {
-		"totals": {
-			"portfolios": Portfolio.objects.count(),
-			"properties": Property.objects.count(),
-			"units": Unit.objects.count(),
-			"leases": Lease.objects.count(),
-			"contacts": Contact.objects.count(),
-			"addresses": Address.objects.count(),
-		}
+		**pnl_charts_context(request, units),
+		**scoped_top_performers_context(request, scope="global"),
+		"total_asset_value": total_asset_value(),
+		"empty_units_count": occupancy["empty_units"],
+		"leases_expiring_count": occupancy["leases_expiring"],
+		"month_to_month_leases_count": occupancy["month_to_month_leases"],
+		"expiring_lease_days": EXPIRING_LEASE_DAYS,
 	}
 	return render(request, "web/crm_dashboard.html", ctx)
 

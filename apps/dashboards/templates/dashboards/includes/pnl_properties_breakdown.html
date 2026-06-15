@@ -1,0 +1,29 @@
+{% load money_extras %}
+<div class="table-responsive">
+  <table class="table table-sm table-striped mb-0 align-middle">
+    <thead>
+      <tr>
+        <th>Property</th>
+        <th class="text-end">Invoices</th>
+        <th class="text-end">Expenses</th>
+        <th class="text-end">Net</th>
+        <th class="text-end"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in properties_pnl %}
+        <tr>
+          <td><a href="{% url 'properties:property_detail' p.pk %}">{{ p.name }}</a></td>
+          <td class="text-end">{{ p.pnl_invoices|zar }}</td>
+          <td class="text-end">{{ p.pnl_expenses|zar }}</td>
+          <td class="text-end">{{ p.pnl_net|zar }}</td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'dashboards:property_pnl' p.pk %}">Detail</a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No properties in this portfolio.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,17 @@
+<form class="crm-search mb-4" method="get" role="search">
+  <div class="input-group">
+    <span class="input-group-text bg-white"><i class="bi bi-search" aria-hidden="true"></i></span>
+    <input
+      class="form-control"
+      type="search"
+      name="q"
+      value="{{ q }}"
+      placeholder="{{ placeholder|default:'Search…' }}"
+      aria-label="{{ placeholder|default:'Search' }}"
+    />
+    <button class="btn btn-outline-secondary" type="submit">Search</button>
+    {% if clear_url %}
+      <a class="btn btn-outline-danger" href="{{ clear_url }}">Clear</a>
+    {% endif %}
+  </div>
+</form>

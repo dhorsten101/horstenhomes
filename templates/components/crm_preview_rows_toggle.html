@@ -1,0 +1,15 @@
+{# Show-all toggle when a list has more rows than preview_limit (default 3). #}
+{# Requires: items, preview_extra_class, optional preview_limit (default 3) #}
+{% if items|length > preview_limit|default:3 %}
+  <button
+    class="btn btn-link btn-sm ps-0 py-0 mt-1 crm-collapse-toggle collapsed"
+    type="button"
+    data-bs-toggle="collapse"
+    data-bs-target=".{{ preview_extra_class }}"
+    aria-expanded="false"
+  >
+    <span class="collapsed-label">Show all {{ items|length }}</span>
+    <span class="expanded-label d-none">Show less</span>
+    <i class="bi bi-chevron-down ms-1" aria-hidden="true"></i>
+  </button>
+{% endif %}

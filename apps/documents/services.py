@@ -15,6 +15,7 @@ def is_allowed_document_target(content_type: ContentType) -> bool:
 		("leases", "lease"),
 		("contacts", "contact"),
 		("addresses", "address"),
+		("accounting", "unitexpense"),
 	}
 	return (content_type.app_label, content_type.model) in allowed
 

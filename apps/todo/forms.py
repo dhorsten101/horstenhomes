@@ -28,9 +28,6 @@ class TodoCreateForm(BootstrapModelForm):
 	class Meta:
 		model = TodoItem
 		fields = ["title", "description", "due_date", "assigned_to"]
-		widgets = {
-			"due_date": forms.DateInput(attrs={"type": "date"}),
-		}
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -65,6 +62,3 @@ class TodoEditForm(BootstrapModelForm):
 	class Meta:
 		model = TodoItem
 		fields = ["title", "description", "due_date", "assigned_to", "status"]
-		widgets = {
-			"due_date": forms.DateInput(attrs={"type": "date"}),
-		}

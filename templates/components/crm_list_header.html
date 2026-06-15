@@ -1,0 +1,15 @@
+<header class="crm-page-header mb-4">
+  <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+    <div>
+      <h1 class="crm-page-title h3 mb-1">{{ title }}</h1>
+      {% if subtitle %}
+        <p class="crm-page-subtitle text-muted small mb-0">{{ subtitle }}</p>
+      {% endif %}
+    </div>
+    {% if create_url %}
+      <a class="btn btn-success flex-shrink-0" href="{{ create_url }}">
+        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>{{ create_label|default:"New" }}
+      </a>
+    {% endif %}
+  </div>
+</header>

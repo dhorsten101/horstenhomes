@@ -1,0 +1,29 @@
+{% load money_extras %}
+<div class="table-responsive">
+  <table class="table table-sm table-striped mb-0 align-middle">
+    <thead>
+      <tr>
+        <th>Unit</th>
+        <th class="text-end">Invoices</th>
+        <th class="text-end">Expenses</th>
+        <th class="text-end">Net</th>
+        <th class="text-end"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in units_pnl %}
+        <tr>
+          <td><a href="{% url 'properties:unit_detail' u.pk %}">{{ u.unit_number }}</a></td>
+          <td class="text-end">{{ u.pnl_invoices|zar }}</td>
+          <td class="text-end">{{ u.pnl_expenses|zar }}</td>
+          <td class="text-end">{{ u.pnl_net|zar }}</td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'dashboards:unit_pnl' u.pk %}">Detail</a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5" class="text-center text-muted py-4">No units on this property.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

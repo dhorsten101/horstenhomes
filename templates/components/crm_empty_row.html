@@ -1,0 +1,8 @@
+<tr>
+  <td colspan="{{ colspan|default:1 }}" class="crm-empty-state text-center py-5">
+    <div class="text-muted mb-2"><i class="bi bi-inbox fs-3 d-block mb-2" aria-hidden="true"></i>{{ message|default:"Nothing here yet." }}</div>
+    {% if create_url %}
+      <a class="btn btn-sm btn-success" href="{{ create_url }}">{{ create_label|default:"Create one" }}</a>
+    {% endif %}
+  </td>
+</tr>

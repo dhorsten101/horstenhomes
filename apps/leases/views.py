@@ -1,15 +1,19 @@
 from __future__ import annotations
 
+from datetime import timedelta
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from apps.core.mixins import PostOnlyDeleteMixin, TenantSchemaRequiredMixin, WorkItemContextMixin
 from apps.leases.forms import LeaseForm
-from apps.leases.models import Lease
+from apps.leases.models import Lease, LeaseStatus
+from apps.leases.services import EXPIRING_LEASE_DAYS
 from apps.properties.models import Unit
 
 
@@ -33,11 +37,22 @@ class LeaseListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView):
 				| Q(primary_tenant__display_name__icontains=q)
 				| Q(external_id__icontains=q)
 			)
+		filter_key = (self.request.GET.get("filter") or "").strip()
+		if filter_key == "expiring":
+			today = timezone.localdate()
+			qs = qs.filter(
+				status=LeaseStatus.ACTIVE,
+				end_date__isnull=False,
+				end_date__lte=today + timedelta(days=EXPIRING_LEASE_DAYS),
+			).order_by("end_date", "-updated_at")
+		elif filter_key == "month_to_month":
+			qs = qs.filter(status=LeaseStatus.ACTIVE, end_date__isnull=True)
 		return qs
 
 	def get_context_data(self, **kwargs):
 		ctx = super().get_context_data(**kwargs)
 		ctx["q"] = (self.request.GET.get("q") or "").strip()
+		ctx["filter"] = (self.request.GET.get("filter") or "").strip()
 		return ctx
 
 

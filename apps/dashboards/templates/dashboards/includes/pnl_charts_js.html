@@ -1,0 +1,9 @@
+{% if monthly_pnl_chart or cumulative_pnl_chart %}
+{% include "dashboards/includes/pnl_chart_lib.html" %}
+{% if monthly_pnl_chart %}
+{% include "dashboards/includes/pnl_monthly_bar_js.html" with chart_data_id=chart_prefix|add:"-monthly-pnl-chart-data" chart_canvas_id=chart_prefix|add:"-monthly-pnl-chart" %}
+{% endif %}
+{% if cumulative_pnl_chart %}
+{% include "dashboards/includes/pnl_cumulative_chart_js.html" with chart_data_id=chart_prefix|add:"-cumulative-pnl-chart-data" chart_canvas_id=chart_prefix|add:"-cumulative-pnl-chart" %}
+{% endif %}
+{% endif %}

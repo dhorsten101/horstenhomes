@@ -14,4 +14,10 @@ class PropertyAdmin(admin.ModelAdmin):
 class UnitAdmin(admin.ModelAdmin):
 	list_display = ("unit_number", "property", "status", "updated_at")
 	list_filter = ("status", "property")
-	search_fields = ("unit_number", "external_id", "property__name")
+	search_fields = (
+		"unit_number",
+		"external_id",
+		"municipal_reference",
+		"managing_agent_reference",
+		"property__name",
+	)

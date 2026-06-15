@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load user_extras %}
+
+{% block title %}Managing agent{% endblock %}
+
+{% block content %}
+<div class="crm-page">
+  {% url 'crm_dashboard' as dash_url %}
+  {% url 'managing_agents:list' as list_url %}
+  {% crm_breadcrumb_nav "Dashboard" dash_url "Managing agents" list_url agent.name %}
+
+  {% url 'managing_agents:update' agent.pk as edit_url %}
+  {% url 'managing_agents:delete' agent.pk as delete_url %}
+  {% include "components/crm_detail_header.html" with title=agent.name updated=agent.updated_at edit_url=edit_url delete_url=delete_url delete_confirm="Delete this managing agent?" %}
+
+  <div class="card crm-card">
+    <div class="card-body">
+      {% include "components/agent_contact_detail.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}

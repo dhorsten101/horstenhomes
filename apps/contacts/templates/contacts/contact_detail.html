@@ -1,26 +1,21 @@
 {% extends "base.html" %}
+{% load user_extras %}
 
 {% block title %}Contact{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <div>
-      <h1 class="h3 mb-0">{{ contact.display_name }}</h1>
-      <div class="text-muted small">Updated {{ contact.updated_at|date:"Y-m-d H:i" }}</div>
-    </div>
-    <div class="btn-group" role="group" aria-label="Contact actions">
-      <a class="btn btn-outline-warning" href="{% url 'contacts:update' contact.pk %}">Edit</a>
-      <form method="post" action="{% url 'contacts:delete' contact.pk %}">
-        {% csrf_token %}
-        <button class="btn btn-outline-danger" type="submit" data-confirm="Delete this contact?">Delete</button>
-      </form>
-    </div>
-  </div>
+<div class="crm-page">
+  {% url 'crm_dashboard' as dash_url %}
+  {% url 'contacts:list' as list_url %}
+  {% crm_breadcrumb_nav "Dashboard" dash_url "Contacts" list_url contact.display_name %}
 
-  <div class="card">
+  {% url 'contacts:update' contact.pk as edit_url %}
+  {% url 'contacts:delete' contact.pk as delete_url %}
+  {% include "components/crm_detail_header.html" with title=contact.display_name updated=contact.updated_at edit_url=edit_url delete_url=delete_url delete_confirm="Delete this contact?" %}
+
+  <div class="card crm-card">
     <div class="card-body">
-      <dl class="row mb-0">
+      <dl class="row mb-0 crm-detail-grid">
         <dt class="col-sm-3">Email</dt>
         <dd class="col-sm-9">{{ contact.email|default:"—" }}</dd>
 
@@ -46,10 +41,5 @@
   </div>
 
   {% include "components/work_item_panels.html" %}
-
-  <div class="mt-3">
-    <a href="{% url 'contacts:list' %}" class="btn btn-primary">Back to list</a>
-  </div>
 </div>
 {% endblock %}
-

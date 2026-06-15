@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %}New invoice{% endblock %}
+
+{% block content %}
+{% url "properties:unit_detail" unit.pk as back_url %}
+{% with unit_label="Unit "|add:unit.unit_number %}
+{% include "components/crud_model_form.html" with title=form_title form=form back_url=back_url back_label=unit_label cancel_url=back_url submit_text="Save invoice" %}
+{% endwith %}
+{% endblock %}

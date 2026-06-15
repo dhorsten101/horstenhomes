@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}{% if form.instance.pk %}Edit estate agent{% else %}New estate agent{% endif %}{% endblock %}
+
+{% block content %}
+{% url "estate_agents:list" as list_url %}
+{% if form.instance.pk %}
+  {% url "estate_agents:detail" form.instance.pk as back_url %}
+  {% include "components/crud_model_form.html" with title="Edit estate agent" form=form back_url=back_url back_label=form.instance.name cancel_url=back_url submit_text="Save" %}
+{% else %}
+  {% include "components/crud_model_form.html" with title="New estate agent" form=form back_url=list_url back_label="Estate agents" cancel_url=list_url submit_text="Save" %}
+{% endif %}
+{% endblock %}

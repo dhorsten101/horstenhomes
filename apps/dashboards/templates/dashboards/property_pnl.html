@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load user_extras money_extras %}
+
+{% block title %}Property P&amp;L{% endblock %}
+
+{% block content %}
+<div class="crm-page">
+  {% url 'crm_dashboard' as dash_url %}
+  {% url 'portfolio:list' as portfolios_url %}
+  {% url 'portfolio:detail' property.portfolio.pk as portfolio_url %}
+  {% url 'properties:property_detail' property.pk as detail_url %}
+  {% crm_breadcrumb_nav "Dashboard" dash_url "Portfolios" portfolios_url property.portfolio.name portfolio_url property.name detail_url "P&amp;L" %}
+
+  {% with page_title="Profit & loss — "|add:property.name %}
+  {% include "components/crm_subpage_header.html" with title=page_title description="Totals include every unit on this property." %}
+  {% endwith %}
+
+  {% include "dashboards/includes/pnl_charts_section.html" with section_title="Profit & loss" chart_prefix="property-pnl" %}
+
+  <div class="card crm-card crm-table-card mb-4">
+    <div class="card-header fw-semibold">By unit</div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead>
+          <tr>
+            <th>Unit</th>
+            <th class="text-end">Invoices</th>
+            <th class="text-end">Expenses</th>
+            <th class="text-end">Net</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in units_pnl %}
+            <tr>
+              <td><a href="{% url 'properties:unit_detail' u.pk %}">{{ u.unit_number }}</a></td>
+              <td class="text-end">{{ u.pnl_invoices|zar }}</td>
+              <td class="text-end">{{ u.pnl_expenses|zar }}</td>
+              <td class="text-end">{{ u.pnl_net|zar }}</td>
+              <td class="text-end crm-row-actions">
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'dashboards:unit_pnl' u.pk %}">P&amp;L</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="text-center text-muted py-4">No units on this property.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% include "components/work_item_panels.html" %}
+</div>
+{% endblock %}
+
+{% block js %}
+{% include "dashboards/includes/pnl_charts_js.html" with chart_prefix="property-pnl" %}
+{% endblock %}

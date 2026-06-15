@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load user_extras money_extras %}
+
+{% block title %}Portfolio P&amp;L{% endblock %}
+
+{% block content %}
+<div class="crm-page">
+  {% url 'crm_dashboard' as dash_url %}
+  {% url 'portfolio:list' as list_url %}
+  {% url 'portfolio:detail' portfolio.pk as detail_url %}
+  {% crm_breadcrumb_nav "Dashboard" dash_url "Portfolios" list_url portfolio.name detail_url "P&amp;L" %}
+
+  {% with page_title="Profit & loss — "|add:portfolio.name %}
+  {% include "components/crm_subpage_header.html" with title=page_title description="Totals roll up every unit on every property in this portfolio." %}
+  {% endwith %}
+
+  {% include "dashboards/includes/pnl_charts_section.html" with section_title="Profit & loss" chart_prefix="portfolio-pnl" %}
+
+  <div class="card crm-card crm-table-card mb-4">
+    <div class="card-header fw-semibold">By property</div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th class="text-end">Invoices</th>
+            <th class="text-end">Expenses</th>
+            <th class="text-end">Net</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in properties_pnl %}
+            <tr>
+              <td><a href="{% url 'properties:property_detail' p.pk %}">{{ p.name }}</a></td>
+              <td class="text-end">{{ p.pnl_invoices|zar }}</td>
+              <td class="text-end">{{ p.pnl_expenses|zar }}</td>
+              <td class="text-end">{{ p.pnl_net|zar }}</td>
+              <td class="text-end crm-row-actions">
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'dashboards:property_pnl' p.pk %}">P&amp;L</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="text-center text-muted py-4">No properties in this portfolio.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% include "components/work_item_panels.html" %}
+</div>
+{% endblock %}
+
+{% block js %}
+{% include "dashboards/includes/pnl_charts_js.html" with chart_prefix="portfolio-pnl" %}
+{% endblock %}

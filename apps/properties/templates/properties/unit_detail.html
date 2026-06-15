@@ -1,56 +1,261 @@
 {% extends "base.html" %}
-{% load money_extras %}
+{% load user_extras money_extras %}
 
 {% block title %}Unit{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <div>
-      <h1 class="h3 mb-0">Unit {{ unit.unit_number }}</h1>
-      <div class="text-muted small">
-        <a href="{% url 'properties:property_detail' unit.property.pk %}">{{ unit.property.name }}</a>
-        · Updated {{ unit.updated_at|date:"Y-m-d H:i" }}
+<div class="crm-page">
+  {% url 'crm_dashboard' as dash_url %}
+  {% url 'properties:property_list' as prop_list_url %}
+  {% url 'properties:property_detail' unit.property.pk as prop_detail_url %}
+  {% crm_breadcrumb_nav "Dashboard" dash_url "Properties" prop_list_url unit.property.name prop_detail_url "Unit "|add:unit.unit_number %}
+
+  {% url 'dashboards:unit_pnl' unit.pk as pnl_url %}
+  {% url 'properties:unit_update' unit.pk as edit_url %}
+  {% url 'properties:unit_delete' unit.pk as delete_url %}
+  {% include "components/crm_detail_header.html" with title_prefix="Unit" title=unit.unit_number updated=unit.updated_at edit_url=edit_url delete_url=delete_url delete_confirm="Delete this unit?" pnl_url=pnl_url %}
+
+  <div class="card crm-card">
+    <div class="card-body py-3">
+      <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-2 crm-unit-detail-grid">
+        <div class="col">
+          <div class="crm-unit-detail-item">
+            <div class="crm-unit-detail-label">Property</div>
+            <div class="crm-unit-detail-value">
+              <a href="{% url 'properties:property_detail' unit.property.pk %}">{{ unit.property.name }}</a>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="crm-unit-detail-item">
+            <div class="crm-unit-detail-label">Status</div>
+            <div class="crm-unit-detail-value">{{ unit.get_status_display }}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="crm-unit-detail-item">
+            <div class="crm-unit-detail-label">Floor</div>
+            <div class="crm-unit-detail-value">{{ unit.floor|default:"—" }}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="crm-unit-detail-item">
+            <div class="crm-unit-detail-label">Bedrooms</div>
+            <div class="crm-unit-detail-value">{{ unit.bedrooms|default:"—" }}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="crm-unit-detail-item">
+            <div class="crm-unit-detail-label">Bathrooms</div>
+            <div class="crm-unit-detail-value">{{ unit.bathrooms|default:"—" }}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="crm-unit-detail-item">
+            <div class="crm-unit-detail-label">Size (m²)</div>
+            <div class="crm-unit-detail-value">{{ unit.size_m2|default:"—" }}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="crm-unit-detail-item">
+            <div class="crm-unit-detail-label">Purchase date</div>
+            <div class="crm-unit-detail-value">{{ unit.purchase_date|date:"Y-m-d"|default:"—" }}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="crm-unit-detail-item">
+            <div class="crm-unit-detail-label">Purchase price</div>
+            <div class="crm-unit-detail-value">{{ unit.purchase_price|zar }}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="crm-unit-detail-item">
+            <div class="crm-unit-detail-label">Municipal ref.</div>
+            <div class="crm-unit-detail-value">{{ unit.municipal_reference|default:"—" }}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="crm-unit-detail-item">
+            <div class="crm-unit-detail-label">Managing agent ref.</div>
+            <div class="crm-unit-detail-value">{{ unit.managing_agent_reference|default:"—" }}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="crm-unit-detail-item">
+            <div class="crm-unit-detail-label">Estate agent</div>
+            <div class="crm-unit-detail-value">
+              {% if unit.estate_agent %}
+                <a href="{% url 'estate_agents:detail' unit.estate_agent.pk %}">{{ unit.estate_agent.name }}</a>
+              {% else %}
+                —
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="crm-unit-detail-item">
+            <div class="crm-unit-detail-label">Managing agent</div>
+            <div class="crm-unit-detail-value">
+              {% if unit.managing_agent %}
+                <a href="{% url 'managing_agents:detail' unit.managing_agent.pk %}">{{ unit.managing_agent.name }}</a>
+              {% else %}
+                —
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="crm-unit-detail-item">
+            <div class="crm-unit-detail-label">Rental agent</div>
+            <div class="crm-unit-detail-value">
+              {% if unit.rental_agent %}
+                <a href="{% url 'rental_agents:detail' unit.rental_agent.pk %}">{{ unit.rental_agent.name }}</a>
+              {% else %}
+                —
+              {% endif %}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="btn-group" role="group" aria-label="Unit actions">
-      <a class="btn btn-outline-warning" href="{% url 'properties:unit_update' unit.pk %}">Edit</a>
-      <form method="post" action="{% url 'properties:unit_delete' unit.pk %}">
-        {% csrf_token %}
-        <button class="btn btn-outline-danger" type="submit" data-confirm="Delete this unit?">Delete</button>
-      </form>
     </div>
   </div>
 
-  <div class="card">
+  <div class="card crm-card mt-3">
+    <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <span class="fw-semibold">Profit &amp; loss &amp; transactions (this unit)</span>
+      <div class="btn-group btn-group-sm" role="group">
+        <a class="btn btn-outline-secondary" href="{% url 'dashboards:unit_pnl' unit.pk %}">P&amp;L</a>
+        <a class="btn btn-outline-primary" href="{% url 'accounting:unit_invoice_create' unit.pk %}">Add invoice</a>
+        <a class="btn btn-outline-primary" href="{% url 'accounting:unit_expense_create' unit.pk %}">Add expense</a>
+      </div>
+    </div>
     <div class="card-body">
-      <dl class="row mb-0">
-        <dt class="col-sm-3">Status</dt>
-        <dd class="col-sm-9">{{ unit.get_status_display }}</dd>
-
-        <dt class="col-sm-3">Floor</dt>
-        <dd class="col-sm-9">{{ unit.floor|default:"—" }}</dd>
-
-        <dt class="col-sm-3">Bedrooms</dt>
-        <dd class="col-sm-9">{{ unit.bedrooms|default:"—" }}</dd>
-
-        <dt class="col-sm-3">Bathrooms</dt>
-        <dd class="col-sm-9">{{ unit.bathrooms|default:"—" }}</dd>
-
-        <dt class="col-sm-3">Size (m²)</dt>
-        <dd class="col-sm-9">{{ unit.size_m2|default:"—" }}</dd>
-
-        <dt class="col-sm-3">Purchase price</dt>
-        <dd class="col-sm-9">{{ unit.purchase_price|usd }}</dd>
-      </dl>
+      {% include "dashboards/includes/pnl_charts_section.html" with chart_prefix="unit-detail" show_summary=True %}
+      <div class="row g-3">
+        <div class="col-md-6">
+          <h2 class="h6 mb-2">
+            Invoices
+            {% if unit_invoices %}<span class="text-muted fw-normal small">({{ unit_invoices|length }})</span>{% endif %}
+          </h2>
+          {% if unit_invoices %}
+            <div class="table-responsive">
+              <table class="table table-sm table-striped mb-0">
+                <thead><tr><th>Date</th><th class="text-end">Amount</th><th>Description</th></tr></thead>
+                <tbody>
+                  {% for row in unit_invoices %}
+                    {% if forloop.counter <= 3 %}
+                      <tr>
+                        <td>{{ row.issue_date|date:"Y-m-d" }}</td>
+                        <td class="text-end">{{ row.amount|zar }}</td>
+                        <td>{{ row.description|default:"—" }}</td>
+                      </tr>
+                    {% endif %}
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% if unit_invoices|length > 3 %}
+              <div class="collapse unit-invoice-extra">
+                <div class="table-responsive">
+                  <table class="table table-sm table-striped mb-0">
+                    <tbody>
+                      {% for row in unit_invoices %}
+                        {% if forloop.counter > 3 %}
+                          <tr>
+                            <td>{{ row.issue_date|date:"Y-m-d" }}</td>
+                            <td class="text-end">{{ row.amount|zar }}</td>
+                            <td>{{ row.description|default:"—" }}</td>
+                          </tr>
+                        {% endif %}
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            {% endif %}
+            {% include "components/crm_preview_rows_toggle.html" with items=unit_invoices preview_extra_class="unit-invoice-extra" %}
+          {% else %}
+            <p class="text-muted small mb-0">No invoices yet.</p>
+          {% endif %}
+        </div>
+        <div class="col-md-6">
+          <h2 class="h6 mb-2">
+            Expenses
+            {% if unit_expenses %}<span class="text-muted fw-normal small">({{ unit_expenses|length }})</span>{% endif %}
+          </h2>
+          {% if unit_expenses %}
+            <div class="table-responsive">
+              <table class="table table-sm table-striped mb-0">
+                <thead><tr><th>Date</th><th class="text-end">Amount</th><th>Description</th><th>Attachment</th></tr></thead>
+                <tbody>
+                  {% for row in unit_expenses %}
+                    {% if forloop.counter <= 3 %}
+                      <tr>
+                        <td>{{ row.expense_date|date:"Y-m-d" }}</td>
+                        <td class="text-end">{{ row.amount|zar }}</td>
+                        <td>{{ row.description|default:"—" }}</td>
+                        <td class="text-nowrap small">
+                          {% for d in row.documents.all %}
+                            {% if forloop.first %}
+                              <a href="{% url 'documents:download' d.pk %}">Download</a>
+                            {% endif %}
+                          {% empty %}
+                            —
+                          {% endfor %}
+                          {% if row.documents.count > 1 %}
+                            <span class="text-muted">(+{{ row.documents.count|add:"-1" }})</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endif %}
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% if unit_expenses|length > 3 %}
+              <div class="collapse unit-expense-extra">
+                <div class="table-responsive">
+                  <table class="table table-sm table-striped mb-0">
+                    <tbody>
+                      {% for row in unit_expenses %}
+                        {% if forloop.counter > 3 %}
+                          <tr>
+                            <td>{{ row.expense_date|date:"Y-m-d" }}</td>
+                            <td class="text-end">{{ row.amount|zar }}</td>
+                            <td>{{ row.description|default:"—" }}</td>
+                            <td class="text-nowrap small">
+                              {% for d in row.documents.all %}
+                                {% if forloop.first %}
+                                  <a href="{% url 'documents:download' d.pk %}">Download</a>
+                                {% endif %}
+                              {% empty %}
+                                —
+                              {% endfor %}
+                              {% if row.documents.count > 1 %}
+                                <span class="text-muted">(+{{ row.documents.count|add:"-1" }})</span>
+                              {% endif %}
+                            </td>
+                          </tr>
+                        {% endif %}
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            {% endif %}
+            {% include "components/crm_preview_rows_toggle.html" with items=unit_expenses preview_extra_class="unit-expense-extra" %}
+          {% else %}
+            <p class="text-muted small mb-0">No expenses yet.</p>
+          {% endif %}
+        </div>
+      </div>
     </div>
   </div>
 
   {% include "components/work_item_panels.html" %}
-
-  <div class="mt-3">
-    <a href="{% url 'properties:unit_list' %}" class="btn btn-primary">Back to units</a>
-  </div>
 </div>
 {% endblock %}
 
+{% block js %}
+{% include "dashboards/includes/pnl_charts_js.html" with chart_prefix="unit-detail" %}
+{% endblock %}

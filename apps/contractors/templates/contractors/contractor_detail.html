@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load user_extras %}
+
+{% block title %}Contractor{% endblock %}
+
+{% block content %}
+<div class="crm-page">
+  {% url 'crm_dashboard' as dash_url %}
+  {% url 'contractors:list' as list_url %}
+  {% crm_breadcrumb_nav "Dashboard" dash_url "Contractors" list_url contractor.name %}
+
+  {% url 'contractors:update' contractor.pk as edit_url %}
+  {% url 'contractors:delete' contractor.pk as delete_url %}
+  {% include "components/crm_detail_header.html" with title=contractor.name updated=contractor.updated_at edit_url=edit_url delete_url=delete_url delete_confirm="Delete this contractor?" %}
+
+  <div class="card crm-card mb-3">
+    <div class="card-body">
+      <dl class="row mb-0 crm-detail-grid">
+        <dt class="col-sm-3">Trade</dt>
+        <dd class="col-sm-9">{{ contractor.trade|default:"—" }}</dd>
+
+        <dt class="col-sm-3">Email</dt>
+        <dd class="col-sm-9">{{ contractor.email|default:"—" }}</dd>
+
+        <dt class="col-sm-3">Phone</dt>
+        <dd class="col-sm-9">{{ contractor.phone|default:"—" }}</dd>
+
+        <dt class="col-sm-3">Reference</dt>
+        <dd class="col-sm-9">{{ contractor.reference|default:"—" }}</dd>
+
+        <dt class="col-sm-3">Address</dt>
+        <dd class="col-sm-9">
+          {% if contractor.address %}
+            <a href="{% url 'addresses:detail' contractor.address.pk %}">{{ contractor.address }}</a>
+          {% else %}
+            —
+          {% endif %}
+        </dd>
+
+        <dt class="col-sm-3">Notes</dt>
+        <dd class="col-sm-9">{{ contractor.notes|default:"—"|linebreaksbr }}</dd>
+
+        <dt class="col-sm-3">Status</dt>
+        <dd class="col-sm-9">
+          {% if contractor.is_active %}
+            <span class="badge text-bg-success">Active</span>
+          {% else %}
+            <span class="badge text-bg-secondary">Inactive</span>
+          {% endif %}
+        </dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="card crm-card">
+    <div class="card-header bg-transparent d-flex align-items-center justify-content-between">
+      <h2 class="h6 mb-0">Assigned contacts</h2>
+      <a class="btn btn-sm btn-outline-primary" href="{% url 'contractors:update' contractor.pk %}">Manage</a>
+    </div>
+    <div class="card-body p-0">
+      {% if contractor.contacts.all %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 align-middle">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for contact in contractor.contacts.all %}
+              <tr>
+                <td><a href="{% url 'contacts:detail' contact.pk %}" class="text-decoration-none">{{ contact.display_name }}</a></td>
+                <td>{{ contact.email|default:"—" }}</td>
+                <td>{{ contact.phone|default:"—" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-muted small mb-0 p-3">No contacts assigned yet. Edit this contractor to link people from your contacts list.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

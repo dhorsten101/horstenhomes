@@ -22,10 +22,9 @@
 
           {# Tenant-only CRM navigation: hide on public schema (www/admin host) #}
           {% if request.tenant and request.tenant.schema_name != "public" %}
-            {# CRM is always a simple link (no dropdown) #}
-{#            <li class="nav-item">#}
-{#              <a class="nav-link" href="{% url 'crm_dashboard' %}">Dash</a>#}
-{#            </li>#}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'crm_dashboard' %}">Dashboard</a>
+            </li>
               <li class="nav-item">
                   <a class="nav-link" href="{% url 'portfolio:list' %}">Portfolio</a>
               </li>
@@ -36,28 +35,23 @@
                   <a class="nav-link" href="{% url 'properties:unit_list' %}">Units</a>
               </li>
               <li class="nav-item">
-                  <a class="nav-link" href="{% url 'contacts:list' %}">Contacts</a>
-              </li>
-              <li class="nav-item">
                   <a class="nav-link" href="{% url 'leases:list' %}">Leases</a>
               </li>
               <li class="nav-item">
-                  <a class="nav-link" href="{% url 'documents:list' %}">Documents</a>
+                  <a class="nav-link" href="{% url 'contacts:list' %}">Contacts</a>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Agents</a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="{% url 'estate_agents:list' %}">Estate agents</a></li>
+                  <li><a class="dropdown-item" href="{% url 'managing_agents:list' %}">Managing agents</a></li>
+                  <li><a class="dropdown-item" href="{% url 'rental_agents:list' %}">Rental agents</a></li>
+                  <li><a class="dropdown-item" href="{% url 'contractors:list' %}">Contractors</a></li>
+                </ul>
               </li>
               <li class="nav-item">
                   <a class="nav-link" href="{% url 'todo:list' %}">Todo</a>
               </li>
-              {% if user.is_staff %}
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'branding:edit' %}">Branding</a>
-                </li>
-              {% endif %}
-
-            {% if user.is_staff %}
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'accounts:user_list' %}">Users</a>
-              </li>
-            {% endif %}
           {% endif %}
 
           {% if user.is_staff %}
@@ -137,6 +131,22 @@
                   Profile
                 </a>
               </li>
+
+              {% if user.is_staff and request.tenant and request.tenant.schema_name != "public" %}
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <a class="dropdown-item" href="{% url 'branding:edit' %}">
+                    <i class="bi bi-palette me-2" aria-hidden="true"></i>
+                    Branding
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{% url 'accounts:user_list' %}">
+                    <i class="bi bi-people me-2" aria-hidden="true"></i>
+                    Users
+                  </a>
+                </li>
+              {% endif %}
 
               {% if request.tenant and request.tenant.schema_name != "public" %}
                 <li><hr class="dropdown-divider"></li>

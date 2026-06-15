@@ -1,0 +1,20 @@
+<form method="get" class="crm-dashboard-year-filter d-flex flex-wrap align-items-center gap-2">
+  {% for key, value in request.GET.items %}
+    {% if key != "year" %}
+      <input type="hidden" name="{{ key }}" value="{{ value }}">
+    {% endif %}
+  {% endfor %}
+  <label for="pnl-year-filter" class="form-label mb-0 small text-muted text-uppercase">Year</label>
+  <select
+    name="year"
+    id="pnl-year-filter"
+    class="form-select form-select-sm"
+    style="width: auto; min-width: 8rem;"
+    onchange="this.form.submit()"
+  >
+    <option value="all"{% if selected_year is None %} selected{% endif %}>All years</option>
+    {% for y in available_years %}
+      <option value="{{ y }}"{% if selected_year == y %} selected{% endif %}>{{ y }}</option>
+    {% endfor %}
+  </select>
+</form>

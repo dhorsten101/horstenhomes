@@ -3,11 +3,11 @@
 {% block title %}{% if form.instance.pk %}Edit contact{% else %}New contact{% endif %}{% endblock %}
 
 {% block content %}
-{% url "contacts:list" as back_url %}
+{% url "contacts:list" as list_url %}
 {% if form.instance.pk %}
-  {% include "components/crud_model_form.html" with title="Edit contact" back_url=back_url cancel_url=back_url submit_text="Save" %}
+  {% url "contacts:detail" form.instance.pk as back_url %}
+  {% include "components/crud_model_form.html" with title="Edit contact" form=form back_url=back_url back_label=form.instance.display_name cancel_url=back_url submit_text="Save" %}
 {% else %}
-  {% include "components/crud_model_form.html" with title="New contact" back_url=back_url cancel_url=back_url submit_text="Save" %}
+  {% include "components/crud_model_form.html" with title="New contact" form=form back_url=list_url back_label="Contacts" cancel_url=list_url submit_text="Save" %}
 {% endif %}
 {% endblock %}
-

@@ -3,7 +3,7 @@
 {% block title %}Edit document{% endblock %}
 
 {% block content %}
-{% url "documents:detail" pk=form.instance.pk as back_url %}
-{% include "components/crud_model_form.html" with title="Edit document" form=form back_url=back_url cancel_url=back_url submit_text="Save" %}
+{% url "documents:list" as list_url %}
+{% url "documents:detail" document.pk as back_url %}
+{% include "components/crud_model_form.html" with title="Edit document" form=form back_url=back_url back_label=document.title|default:"Document" cancel_url=back_url submit_text="Save" %}
 {% endblock %}
-

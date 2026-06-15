@@ -1,0 +1,95 @@
+{% load money_extras %}
+{% if not compact %}
+<h3 class="crm-section-title h6 text-muted text-uppercase mb-2">
+  Top performers{% if selected_year %} — {{ selected_year }}{% endif %}
+</h3>
+{% endif %}
+<div class="row row-cols-3 {% if compact %}g-2 crm-dashboard__performers mb-3{% else %}row-cols-1 {% if top_performer_scope == 'global' %}row-cols-md-3{% elif top_performer_scope == 'portfolio' %}row-cols-md-2{% else %}row-cols-md-1{% endif %} g-3 mb-4{% endif %}">
+  {% if top_performer_scope == "global" or top_performer_scope == "portfolio" %}
+  <div class="col">
+    <div class="card crm-card {% if compact %}crm-dashboard-metric{% else %}crm-stat-card{% endif %} h-100 border-success border-opacity-50">
+      <div class="card-body">
+        <div class="{% if compact %}crm-dashboard-metric__label{% else %}text-muted small text-uppercase{% endif %}">
+          Unit{% if top_performer_scope == "portfolio" %} in portfolio{% endif %}
+        </div>
+        <div class="crm-performer-dual{% if compact %} crm-performer-dual--compact{% endif %}">
+          {% include "dashboards/includes/pnl_performer_side.html" with side="best" item=top_unit label=top_unit.unit_number sublabel=top_unit.property.name link_url="dashboards:unit_pnl" compact=compact %}
+          {% if not bottom_unit or not top_unit or bottom_unit.pk != top_unit.pk %}
+            {% include "dashboards/includes/pnl_performer_side.html" with side="worst" item=bottom_unit label=bottom_unit.unit_number sublabel=bottom_unit.property.name link_url="dashboards:unit_pnl" compact=compact %}
+          {% else %}
+            <div class="crm-performer-dual__side">
+              <div class="crm-performer-dual__tag">Worst</div>
+              <div class="{% if compact %}crm-dashboard-metric__value{% else %}fs-6 fw-semibold{% endif %} text-muted">—</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if top_performer_scope == "global" or top_performer_scope == "portfolio" %}
+  <div class="col">
+    <div class="card crm-card {% if compact %}crm-dashboard-metric{% else %}crm-stat-card{% endif %} h-100 border-success border-opacity-50">
+      <div class="card-body">
+        <div class="{% if compact %}crm-dashboard-metric__label{% else %}text-muted small text-uppercase{% endif %}">
+          Property{% if top_performer_scope == "portfolio" %} in portfolio{% endif %}
+        </div>
+        <div class="crm-performer-dual{% if compact %} crm-performer-dual--compact{% endif %}">
+          {% include "dashboards/includes/pnl_performer_side.html" with side="best" item=top_property label=top_property.name link_url="dashboards:property_pnl" compact=compact %}
+          {% if not bottom_property or not top_property or bottom_property.pk != top_property.pk %}
+            {% include "dashboards/includes/pnl_performer_side.html" with side="worst" item=bottom_property label=bottom_property.name link_url="dashboards:property_pnl" compact=compact %}
+          {% else %}
+            <div class="crm-performer-dual__side">
+              <div class="crm-performer-dual__tag">Worst</div>
+              <div class="{% if compact %}crm-dashboard-metric__value{% else %}fs-6 fw-semibold{% endif %} text-muted">—</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if top_performer_scope == "global" %}
+  <div class="col">
+    <div class="card crm-card {% if compact %}crm-dashboard-metric{% else %}crm-stat-card{% endif %} h-100 border-success border-opacity-50">
+      <div class="card-body">
+        <div class="{% if compact %}crm-dashboard-metric__label{% else %}text-muted small text-uppercase{% endif %}">Portfolio</div>
+        <div class="crm-performer-dual{% if compact %} crm-performer-dual--compact{% endif %}">
+          {% include "dashboards/includes/pnl_performer_side.html" with side="best" item=top_portfolio label=top_portfolio.name link_url="dashboards:portfolio_pnl" compact=compact %}
+          {% if not bottom_portfolio or not top_portfolio or bottom_portfolio.pk != top_portfolio.pk %}
+            {% include "dashboards/includes/pnl_performer_side.html" with side="worst" item=bottom_portfolio label=bottom_portfolio.name link_url="dashboards:portfolio_pnl" compact=compact %}
+          {% else %}
+            <div class="crm-performer-dual__side">
+              <div class="crm-performer-dual__tag">Worst</div>
+              <div class="{% if compact %}crm-dashboard-metric__value{% else %}fs-6 fw-semibold{% endif %} text-muted">—</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if top_performer_scope == "property" %}
+  <div class="col">
+    <div class="card crm-card {% if compact %}crm-dashboard-metric{% else %}crm-stat-card{% endif %} h-100 border-success border-opacity-50">
+      <div class="card-body">
+        <div class="{% if compact %}crm-dashboard-metric__label{% else %}text-muted small text-uppercase{% endif %}">Unit on property</div>
+        <div class="crm-performer-dual{% if compact %} crm-performer-dual--compact{% endif %}">
+          {% include "dashboards/includes/pnl_performer_side.html" with side="best" item=top_unit label=top_unit.unit_number link_url="dashboards:unit_pnl" compact=compact %}
+          {% if not bottom_unit or not top_unit or bottom_unit.pk != top_unit.pk %}
+            {% include "dashboards/includes/pnl_performer_side.html" with side="worst" item=bottom_unit label=bottom_unit.unit_number link_url="dashboards:unit_pnl" compact=compact %}
+          {% else %}
+            <div class="crm-performer-dual__side">
+              <div class="crm-performer-dual__tag">Worst</div>
+              <div class="{% if compact %}crm-dashboard-metric__value{% else %}fs-6 fw-semibold{% endif %} text-muted">—</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>

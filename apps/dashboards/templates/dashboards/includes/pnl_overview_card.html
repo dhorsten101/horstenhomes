@@ -1,0 +1,10 @@
+{% load money_extras %}
+<div class="card crm-card crm-chart-card mb-3">
+  <div class="card-body">
+    <h2 class="crm-section-title h6 text-muted text-uppercase mb-1">{{ title }}</h2>
+    <p class="small text-muted mb-3">
+      Invoices {{ invoices_total|zar }} · Expenses {{ expenses_total|zar }} · Net {{ net|zar }}
+    </p>
+    {% include "dashboards/includes/pnl_chart_block.html" with chart_canvas_id=chart_canvas_id chart_data_id=chart_data_id %}
+  </div>
+</div>

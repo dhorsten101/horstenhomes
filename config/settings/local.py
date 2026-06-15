@@ -8,6 +8,7 @@ ALLOWED_HOSTS = [
 	"127.0.0.1",
 	"admin.horstenhomes.local",
 	".horstenhomes.local",
+	"www.horstenhomes",
 ]
 
 # Dev-friendly: print password reset links to console logs

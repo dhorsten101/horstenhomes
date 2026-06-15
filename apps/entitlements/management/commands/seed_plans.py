@@ -17,7 +17,7 @@ class Command(BaseCommand):
 				"code": "free",
 				"name": "Free",
 				"description": "Up to 25 units included.",
-				"currency": "USD",
+				"currency": "ZAR",
 				"unit_price": Decimal("0.00"),
 				"included_units": 25,
 				"quotas": {QUOTA_MAX_UNITS: 25},
@@ -26,7 +26,7 @@ class Command(BaseCommand):
 				"code": "unlimited",
 				"name": "Unlimited",
 				"description": "Unlimited units.",
-				"currency": "USD",
+				"currency": "ZAR",
 				"unit_price": Decimal("25.00"),
 				# Unlimited: omit max_units so it is treated as "no limit".
 				"included_units": 0,

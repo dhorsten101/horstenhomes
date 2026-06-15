@@ -27,3 +27,24 @@ def initials(value: str | None) -> str:
 		return parts[0][:1].upper()
 	return (parts[0][:1] + parts[-1][:1]).upper()
 
+
+@register.inclusion_tag("components/crm_breadcrumb_nav.html")
+def crm_breadcrumb_nav(*entries):
+	"""Alternating label, url pairs; final label alone is the current page."""
+	items = []
+	i = 0
+	while i < len(entries):
+		label = entries[i]
+		if i + 1 < len(entries) and entries[i + 1]:
+			items.append({"label": label, "url": entries[i + 1]})
+			i += 2
+		else:
+			items.append({"label": label, "url": None})
+			i += 1
+	parent_back = None
+	for item in reversed(items[:-1]):
+		if item.get("url"):
+			parent_back = item
+			break
+	return {"items": items, "parent_back": parent_back}
+

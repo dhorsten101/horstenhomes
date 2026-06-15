@@ -1,14 +1,21 @@
 {# Reusable Bootstrap form renderer for ModelForms #}
-<div class="container py-4">
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <h1 class="h3 mb-0">{{ title }}</h1>
-    {% if back_url %}
-      <a class="btn btn-primary" href="{{ back_url }}">Back</a>
-    {% endif %}
-  </div>
+{% if not bare %}
+<div class="crm-page">
+  {% if back_url %}
+    <div class="crm-page-nav mb-3">
+      <a href="{{ back_url }}" class="crm-quick-back">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+        <span>{{ back_label|default:"Back" }}</span>
+      </a>
+    </div>
+  {% endif %}
+  <header class="crm-page-header mb-4">
+    <h1 class="crm-page-title h3 mb-0">{{ title }}</h1>
+  </header>
+{% endif %}
 
-  <div class="card">
-    <div class="card-body">
+  <div class="card crm-card">
+    <div class="card-body p-4">
       <form method="post" {% if multipart %}enctype="multipart/form-data"{% endif %}>
         {% csrf_token %}
 
@@ -25,23 +32,28 @@
                   <span class="text-danger" aria-hidden="true">*</span>
                 {% endif %}
               </label>
-              {{ field }}
+              {% if field.name in form.address_field_names %}
+                {% include "addresses/includes/address_field.html" with field=field %}
+              {% else %}
+                {{ field }}
+              {% endif %}
               {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
               {% for err in field.errors %}<div class="text-danger small">{{ err }}</div>{% endfor %}
             </div>
           {% endfor %}
         </div>
 
-        <div class="mt-3 d-flex gap-2">
+        <div class="mt-4 d-flex flex-wrap gap-2">
           <button class="btn btn-primary" type="submit">{{ submit_text|default:"Save" }}</button>
           {% if cancel_url %}
             <a class="btn btn-outline-secondary" href="{{ cancel_url }}">Cancel</a>
-          {% elif back_url %}
+          {% elif back_url and not bare %}
             <a class="btn btn-outline-secondary" href="{{ back_url }}">Cancel</a>
           {% endif %}
         </div>
       </form>
     </div>
   </div>
+{% if not bare %}
 </div>
-
+{% endif %}

@@ -1,0 +1,15 @@
+{% load money_extras %}
+<div class="crm-performer-dual__side">
+  <div class="crm-performer-dual__tag">{{ side|title }}</div>
+  {% if item %}
+    <div class="crm-performer-dual__name{% if compact %} crm-dashboard-metric__value{% else %}fs-6 fw-semibold{% endif %}">
+      <a class="link-body-emphasis text-decoration-none" href="{% url link_url item.pk %}">{{ label }}</a>
+    </div>
+    {% if sublabel and not compact %}
+      <div class="text-muted small">{{ sublabel }}</div>
+    {% endif %}
+    <div class="crm-performer-dual__meta{% if compact %} crm-dashboard-metric__meta{% else %}fw-semibold small{% endif %}">{{ item.pnl_net|zar }}{% if compact %} net{% endif %}</div>
+  {% else %}
+    <div class="{% if compact %}crm-dashboard-metric__value{% else %}fs-6 fw-semibold{% endif %} text-muted">—</div>
+  {% endif %}
+</div>

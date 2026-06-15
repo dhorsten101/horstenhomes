@@ -1,0 +1,37 @@
+{% load user_extras %}
+<dl class="row mb-0 crm-detail-grid">
+  <dt class="col-sm-3">Contact</dt>
+  <dd class="col-sm-9">
+    <a href="{% url 'contacts:detail' agent.contact.pk %}">{{ agent.contact }}</a>
+  </dd>
+
+  <dt class="col-sm-3">Email</dt>
+  <dd class="col-sm-9">{{ agent.email|default:"—" }}</dd>
+
+  <dt class="col-sm-3">Phone</dt>
+  <dd class="col-sm-9">{{ agent.phone|default:"—" }}</dd>
+
+  <dt class="col-sm-3">Reference</dt>
+  <dd class="col-sm-9">{{ agent.reference|default:"—" }}</dd>
+
+  <dt class="col-sm-3">Address</dt>
+  <dd class="col-sm-9">
+    {% if agent.address %}
+      <a href="{% url 'addresses:detail' agent.address.pk %}">{{ agent.address }}</a>
+    {% else %}
+      —
+    {% endif %}
+  </dd>
+
+  <dt class="col-sm-3">Notes</dt>
+  <dd class="col-sm-9">{{ agent.notes|default:"—"|linebreaksbr }}</dd>
+
+  <dt class="col-sm-3">Status</dt>
+  <dd class="col-sm-9">
+    {% if agent.is_active %}
+      <span class="badge text-bg-success">Active</span>
+    {% else %}
+      <span class="badge text-bg-secondary">Inactive</span>
+    {% endif %}
+  </dd>
+</dl>

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}{% if form.instance.pk %}Edit contractor{% else %}New contractor{% endif %}{% endblock %}
+
+{% block content %}
+{% url "contractors:list" as list_url %}
+{% if form.instance.pk %}
+  {% url "contractors:detail" form.instance.pk as back_url %}
+  {% include "components/crud_model_form.html" with title="Edit contractor" form=form back_url=back_url back_label=form.instance.name cancel_url=back_url submit_text="Save" %}
+{% else %}
+  {% include "components/crud_model_form.html" with title="New contractor" form=form back_url=list_url back_label="Contractors" cancel_url=list_url submit_text="Save" %}
+{% endif %}
+{% endblock %}

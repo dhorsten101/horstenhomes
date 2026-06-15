@@ -1,0 +1,26 @@
+{% if monthly_pnl_chart %}
+  <div class="card crm-card crm-chart-card h-100 mb-0 w-100">
+    <div class="card-body{% if compact %} crm-dashboard-chart-body{% endif %}">
+      {% if not compact %}
+      <div class="mb-3">
+        {% if pnl_chart_granularity == "yearly" %}
+        <h2 class="crm-section-title h6 text-muted text-uppercase mb-1">Yearly breakdown</h2>
+        <p class="text-muted small mb-0">Money in vs money out each year. The line shows profit kept.</p>
+        {% else %}
+        <h2 class="crm-section-title h6 text-muted text-uppercase mb-1">Monthly breakdown</h2>
+        <p class="text-muted small mb-0">Money in vs money out each month. The line shows profit kept.</p>
+        {% endif %}
+      </div>
+      {% else %}
+      <div class="crm-dashboard-chart-title">
+        {% if pnl_chart_granularity == "yearly" %}Yearly{% else %}Monthly{% endif %} breakdown
+      </div>
+      {% endif %}
+      {% include "dashboards/includes/pnl_chart_legend_monthly.html" %}
+      <div class="crm-chart-wrap">
+        <canvas id="{{ chart_canvas_id }}" aria-label="Monthly money in vs money out chart"></canvas>
+      </div>
+    </div>
+  </div>
+  {{ monthly_pnl_chart|json_script:chart_data_id }}
+{% endif %}

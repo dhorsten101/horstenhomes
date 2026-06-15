@@ -1,40 +1,53 @@
 {% extends "base.html" %}
+{% load user_extras %}
 
 {% block title %}Todo{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <div>
-      <h1 class="h4 mb-0">{{ todo.title }}</h1>
-      <div class="text-muted small">
-        {% if todo.content_type and todo.object_id %}
-          {{ todo.content_type.app_label }}.{{ todo.content_type.model }} #{{ todo.object_id }}
-        {% else %}
-          Unattached
-        {% endif %}
+<div class="crm-page">
+  {% url 'crm_dashboard' as dash_url %}
+  {% url 'todo:list' as list_url %}
+  {% crm_breadcrumb_nav "Dashboard" dash_url "Todo" list_url todo.title %}
+
+  <header class="crm-page-header mb-4">
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+      <div>
+        <h1 class="crm-page-title h3 mb-1">{{ todo.title }}</h1>
+        <p class="crm-page-subtitle text-muted small mb-0">
+          {% if todo.content_type and todo.object_id %}
+            Linked to {{ todo.content_type.app_label }}.{{ todo.content_type.model }} #{{ todo.object_id }}
+          {% else %}
+            Not linked to a record
+          {% endif %}
+        </p>
+      </div>
+      <div class="crm-page-actions d-flex flex-wrap gap-2">
+        <form method="post" action="{% url 'todo:toggle' todo.pk %}" class="d-inline">
+          {% csrf_token %}
+          <button class="btn btn-sm {% if todo.status == 'done' %}btn-outline-secondary{% else %}btn-outline-success{% endif %}" type="submit">
+            {% if todo.status == 'done' %}<i class="bi bi-arrow-counterclockwise me-1" aria-hidden="true"></i>Reopen{% else %}<i class="bi bi-check-lg me-1" aria-hidden="true"></i>Mark done{% endif %}
+          </button>
+        </form>
+        <a class="btn btn-outline-secondary" href="{% url 'todo:edit' todo.pk %}"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Edit</a>
+        <form method="post" action="{% url 'todo:delete' todo.pk %}" class="d-inline">
+          {% csrf_token %}
+          <button class="btn btn-outline-danger" type="submit" data-confirm="Delete this todo?"><i class="bi bi-trash me-1" aria-hidden="true"></i>Delete</button>
+        </form>
       </div>
     </div>
-    <div class="d-flex gap-2">
-      <form method="post" action="{% url 'todo:toggle' todo.pk %}">
-        {% csrf_token %}
-        <button class="btn btn-sm {% if todo.status == 'done' %}btn-outline-secondary{% else %}btn-outline-success{% endif %}" type="submit">
-          {% if todo.status == 'done' %}Reopen{% else %}Done{% endif %}
-        </button>
-      </form>
-      <a class="btn btn-sm btn-outline-warning" href="{% url 'todo:edit' todo.pk %}">Edit</a>
-      <form method="post" action="{% url 'todo:delete' todo.pk %}">
-        {% csrf_token %}
-        <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete this todo?">Delete</button>
-      </form>
-    </div>
-  </div>
+  </header>
 
-  <div class="card">
+  <div class="card crm-card">
     <div class="card-body">
-      <dl class="row mb-0">
+      <dl class="row mb-0 crm-detail-grid">
         <dt class="col-sm-3">Status</dt>
-        <dd class="col-sm-9">{{ todo.get_status_display }}</dd>
+        <dd class="col-sm-9">
+          {% if todo.status == 'done' %}
+            <span class="badge text-bg-secondary">Done</span>
+          {% else %}
+            <span class="badge text-bg-success">Open</span>
+          {% endif %}
+        </dd>
 
         <dt class="col-sm-3">Due date</dt>
         <dd class="col-sm-9">{{ todo.due_date|default:"—" }}</dd>
@@ -47,10 +60,5 @@
       </dl>
     </div>
   </div>
-
-  <div class="mt-3">
-    <a class="btn btn-primary" href="{% url 'todo:list' %}">Back to todo</a>
-  </div>
 </div>
 {% endblock %}
-

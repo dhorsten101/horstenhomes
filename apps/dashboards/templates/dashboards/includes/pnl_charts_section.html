@@ -1,0 +1,38 @@
+{% if section_title %}
+<div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
+  <h2 class="crm-section-title mb-0">
+    {{ section_title }}
+    {% if selected_year %}<span class="text-muted fw-normal">— {{ selected_year }}</span>{% endif %}
+  </h2>
+  {% include "dashboards/includes/pnl_year_filter.html" %}
+</div>
+{% else %}
+<div class="d-flex flex-wrap justify-content-end mb-3">
+  {% include "dashboards/includes/pnl_year_filter.html" %}
+</div>
+{% endif %}
+
+{% if show_summary != False %}
+  {% include "dashboards/includes/pnl_summary_cards.html" %}
+{% endif %}
+
+{% if top_performer_scope %}
+  {% include "dashboards/includes/pnl_performer_cards.html" %}
+{% endif %}
+
+{% if monthly_pnl_chart or cumulative_pnl_chart %}
+  <div class="row g-3 mb-4">
+    {% if monthly_pnl_chart %}
+      <div class="col-lg-6">
+        {% include "dashboards/includes/pnl_monthly_bar_block.html" with chart_canvas_id=chart_prefix|add:"-monthly-pnl-chart" chart_data_id=chart_prefix|add:"-monthly-pnl-chart-data" %}
+      </div>
+    {% endif %}
+    {% if cumulative_pnl_chart %}
+      <div class="col-lg-6">
+        {% include "dashboards/includes/pnl_cumulative_chart_block.html" with chart_canvas_id=chart_prefix|add:"-cumulative-pnl-chart" chart_data_id=chart_prefix|add:"-cumulative-pnl-chart-data" %}
+      </div>
+    {% endif %}
+  </div>
+{% elif show_empty_message != False %}
+  <p class="text-muted small mb-4">No accounting activity{% if selected_year %} in {{ selected_year }}{% endif %} yet.</p>
+{% endif %}

@@ -1,0 +1,17 @@
+<div class="input-group crm-address-field">
+  <div class="flex-grow-1">{{ field }}</div>
+  <button
+    type="button"
+    class="btn btn-outline-secondary"
+    data-bs-toggle="modal"
+    data-bs-target="#addressQuickCreateModal"
+    data-address-field="{{ field.id_for_label }}"
+    hx-get="{% url 'addresses:quick_create' %}?field_id={{ field.id_for_label|urlencode }}"
+    hx-target="#addressQuickCreateModalBody"
+    hx-swap="innerHTML"
+    aria-label="Create new address"
+  >
+    <i class="bi bi-plus-lg" aria-hidden="true"></i>
+    <span class="d-none d-sm-inline ms-1">New</span>
+  </button>
+</div>

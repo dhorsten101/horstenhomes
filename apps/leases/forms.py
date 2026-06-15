@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from django import forms
-
 from apps.core.forms import BootstrapModelForm
 from apps.leases.models import Lease
 
@@ -19,8 +17,4 @@ class LeaseForm(BootstrapModelForm):
 			"deposit_amount",
 			"billing_day",
 		]
-		widgets = {
-			"start_date": forms.DateInput(attrs={"type": "date"}),
-			"end_date": forms.DateInput(attrs={"type": "date"}),
-		}
 

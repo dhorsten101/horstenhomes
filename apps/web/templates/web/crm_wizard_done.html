@@ -3,78 +3,82 @@
 {% block title %}Setup complete{% endblock %}
 
 {% block content %}
-<div class="container py-4" style="max-width: 900px;">
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <div>
-      <h1 class="h4 mb-1">Setup complete</h1>
-      <div class="text-muted small">Your first CRM records are ready.</div>
+<div class="crm-page mx-auto" style="max-width: 900px;">
+  <header class="crm-page-header mb-4">
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+      <div>
+        <h1 class="crm-page-title h4 mb-1">Setup complete</h1>
+        <p class="crm-page-subtitle text-muted small mb-0">Your first CRM records are ready.</p>
+      </div>
+      <a class="btn btn-outline-secondary btn-sm" href="{% url 'crm_dashboard' %}">
+        <i class="bi bi-house me-1" aria-hidden="true"></i>Dashboard
+      </a>
     </div>
-    <a class="btn btn-sm btn-primary" href="{% url 'crm_dashboard' %}">Back to dashboard</a>
-  </div>
+  </header>
 
   <div class="row g-3">
     {% if address %}
       <div class="col-12 col-md-6">
-        <div class="card">
+        <div class="card crm-card crm-stat-card h-100">
           <div class="card-body">
-            <div class="text-muted small">Address</div>
-            <div class="fw-semibold">{{ address }}</div>
-            <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'addresses:detail' address.id %}">View</a>
+            <div class="text-muted small text-uppercase">Address</div>
+            <div class="fw-semibold mt-1">{{ address }}</div>
+            <a class="btn btn-sm btn-outline-primary mt-3" href="{% url 'addresses:detail' address.id %}">View</a>
           </div>
         </div>
       </div>
     {% endif %}
     {% if contact %}
       <div class="col-12 col-md-6">
-        <div class="card">
+        <div class="card crm-card crm-stat-card h-100">
           <div class="card-body">
-            <div class="text-muted small">Contact</div>
-            <div class="fw-semibold">{{ contact }}</div>
-            <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'contacts:detail' contact.id %}">View</a>
+            <div class="text-muted small text-uppercase">Contact</div>
+            <div class="fw-semibold mt-1">{{ contact }}</div>
+            <a class="btn btn-sm btn-outline-primary mt-3" href="{% url 'contacts:detail' contact.id %}">View</a>
           </div>
         </div>
       </div>
     {% endif %}
     {% if portfolio %}
       <div class="col-12 col-md-6">
-        <div class="card">
+        <div class="card crm-card crm-stat-card h-100">
           <div class="card-body">
-            <div class="text-muted small">Portfolio</div>
-            <div class="fw-semibold">{{ portfolio }}</div>
-            <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'portfolio:detail' portfolio.id %}">View</a>
+            <div class="text-muted small text-uppercase">Portfolio</div>
+            <div class="fw-semibold mt-1">{{ portfolio }}</div>
+            <a class="btn btn-sm btn-outline-primary mt-3" href="{% url 'portfolio:detail' portfolio.id %}">View</a>
           </div>
         </div>
       </div>
     {% endif %}
     {% if property %}
       <div class="col-12 col-md-6">
-        <div class="card">
+        <div class="card crm-card crm-stat-card h-100">
           <div class="card-body">
-            <div class="text-muted small">Property</div>
-            <div class="fw-semibold">{{ property }}</div>
-            <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'properties:property_detail' property.id %}">View</a>
+            <div class="text-muted small text-uppercase">Property</div>
+            <div class="fw-semibold mt-1">{{ property }}</div>
+            <a class="btn btn-sm btn-outline-primary mt-3" href="{% url 'properties:property_detail' property.id %}">View</a>
           </div>
         </div>
       </div>
     {% endif %}
     {% if unit %}
       <div class="col-12 col-md-6">
-        <div class="card">
+        <div class="card crm-card crm-stat-card h-100">
           <div class="card-body">
-            <div class="text-muted small">Unit</div>
-            <div class="fw-semibold">{{ unit }}</div>
-            <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'properties:unit_detail' unit.id %}">View</a>
+            <div class="text-muted small text-uppercase">Unit</div>
+            <div class="fw-semibold mt-1">{{ unit }}</div>
+            <a class="btn btn-sm btn-outline-primary mt-3" href="{% url 'properties:unit_detail' unit.id %}">View</a>
           </div>
         </div>
       </div>
     {% endif %}
     {% if lease %}
       <div class="col-12 col-md-6">
-        <div class="card">
+        <div class="card crm-card crm-stat-card h-100">
           <div class="card-body">
-            <div class="text-muted small">Lease</div>
-            <div class="fw-semibold">{{ lease }}</div>
-            <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'leases:detail' lease.id %}">View</a>
+            <div class="text-muted small text-uppercase">Lease</div>
+            <div class="fw-semibold mt-1">{{ lease }}</div>
+            <a class="btn btn-sm btn-outline-primary mt-3" href="{% url 'leases:detail' lease.id %}">View</a>
           </div>
         </div>
       </div>
@@ -86,4 +90,3 @@
   </div>
 </div>
 {% endblock %}
-

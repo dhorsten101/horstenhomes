@@ -1,0 +1,32 @@
+<div class="row row-cols-1 row-cols-md-3 g-3 mb-4">
+  <div class="col">
+    <div class="card crm-card crm-stat-card h-100 border-secondary border-opacity-25 position-relative">
+      <div class="card-body">
+        <div class="text-muted small text-uppercase">Empty units</div>
+        <div class="fs-4 fw-semibold">{{ empty_units_count }}</div>
+        <div class="text-muted small mt-1">Vacant and available</div>
+        <a class="stretched-link" href="{% url 'properties:unit_list' %}?status=vacant" aria-label="View empty units"></a>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card crm-card crm-stat-card h-100 border-warning border-opacity-50 position-relative">
+      <div class="card-body">
+        <div class="text-muted small text-uppercase">Leases expiring</div>
+        <div class="fs-4 fw-semibold">{{ leases_expiring_count }}</div>
+        <div class="text-muted small mt-1">Within {{ expiring_lease_days }} days</div>
+        <a class="stretched-link" href="{% url 'leases:list' %}?filter=expiring" aria-label="View expiring leases"></a>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card crm-card crm-stat-card h-100 border-info border-opacity-50 position-relative">
+      <div class="card-body">
+        <div class="text-muted small text-uppercase">Month-to-month</div>
+        <div class="fs-4 fw-semibold">{{ month_to_month_leases_count }}</div>
+        <div class="text-muted small mt-1">Active, no end date</div>
+        <a class="stretched-link" href="{% url 'leases:list' %}?filter=month_to_month" aria-label="View month-to-month leases"></a>
+      </div>
+    </div>
+  </div>
+</div>

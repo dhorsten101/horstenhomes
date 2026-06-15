@@ -26,7 +26,7 @@ class Plan(TimeStampedUUIDModel):
 	is_active = models.BooleanField(default=True, db_index=True)
 
 	# Billing primitives (provider-agnostic)
-	currency = models.CharField(max_length=3, default="USD")
+	currency = models.CharField(max_length=3, default="ZAR")
 	unit_price = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
 	included_units = models.PositiveIntegerField(default=0)
 

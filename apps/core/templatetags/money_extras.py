@@ -56,22 +56,22 @@ def _short_number(amount: Decimal) -> str:
 	return f"{'-' if amount < 0 else ''}{s}"
 
 
-@register.filter(name="usd")
-def usd(value) -> str:
+@register.filter(name="zar")
+def zar(value) -> str:
 	"""
-	Format money as USD with short units:
-	- 1_100_000 -> "$ 1.1mil"
-	- 11_100_000 -> "$ 11.1mil"
+	Format money as ZAR with short units:
+	- 1_100_000 -> "R 1.1mil"
+	- 11_100_000 -> "R 11.1mil"
 	"""
 
 	d = _to_decimal(value)
 	if d is None:
 		return "—"
-	return f"$ {_short_number(d)}"
+	return f"R {_short_number(d)}"
 
 
 # Backwards-compat alias (deprecated): keep older templates from breaking.
-@register.filter(name="zar")
-def zar(value) -> str:
-	return usd(value)
+@register.filter(name="usd")
+def usd(value) -> str:
+	return zar(value)
 

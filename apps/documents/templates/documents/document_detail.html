@@ -1,27 +1,22 @@
 {% extends "base.html" %}
+{% load user_extras %}
 
 {% block title %}Document{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <div>
-      <h1 class="h4 mb-0">{{ document.title|default:"Document" }}</h1>
-      <div class="text-muted small">Uploaded {{ document.created_at|date:"Y-m-d H:i" }}</div>
-    </div>
-    <div class="d-flex gap-2">
-      <a class="btn btn-sm btn-outline-primary" href="{% url 'documents:download' document.pk %}">Download</a>
-      <a class="btn btn-sm btn-outline-warning" href="{% url 'documents:edit' document.pk %}">Edit</a>
-      <form method="post" action="{% url 'documents:delete' document.pk %}">
-        {% csrf_token %}
-        <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete this document?">Delete</button>
-      </form>
-    </div>
-  </div>
+<div class="crm-page">
+  {% url 'crm_dashboard' as dash_url %}
+  {% url 'documents:list' as list_url %}
+  {% crm_breadcrumb_nav "Dashboard" dash_url "Documents" list_url document.title|default:"Document" %}
 
-  <div class="card">
+  {% url 'documents:download' document.pk as download_url %}
+  {% url 'documents:edit' document.pk as edit_url %}
+  {% url 'documents:delete' document.pk as delete_url %}
+  {% include "components/crm_detail_header.html" with title=document.title|default:"Document" updated=document.created_at updated_label="Uploaded" edit_url=edit_url delete_url=delete_url delete_confirm="Delete this document?" download_url=download_url %}
+
+  <div class="card crm-card">
     <div class="card-body">
-      <dl class="row mb-0">
+      <dl class="row mb-0 crm-detail-grid">
         <dt class="col-sm-3">Attached to</dt>
         <dd class="col-sm-9 small text-muted">{{ document.content_type.app_label }}.{{ document.content_type.model }} #{{ document.object_id }}</dd>
 
@@ -33,10 +28,5 @@
       </dl>
     </div>
   </div>
-
-  <div class="mt-3">
-    <a class="btn btn-primary" href="{% url 'documents:list' %}">Back to documents</a>
-  </div>
 </div>
 {% endblock %}
-

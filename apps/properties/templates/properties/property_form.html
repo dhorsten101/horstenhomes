@@ -3,11 +3,11 @@
 {% block title %}{% if form.instance.pk %}Edit property{% else %}New property{% endif %}{% endblock %}
 
 {% block content %}
-{% url "properties:property_list" as back_url %}
+{% url "properties:property_list" as list_url %}
 {% if form.instance.pk %}
-  {% include "components/crud_model_form.html" with title="Edit property" back_url=back_url cancel_url=back_url submit_text="Save" %}
+  {% url "properties:property_detail" form.instance.pk as back_url %}
+  {% include "components/crud_model_form.html" with title="Edit property" form=form back_url=back_url back_label=form.instance.name cancel_url=back_url submit_text="Save" %}
 {% else %}
-  {% include "components/crud_model_form.html" with title="New property" back_url=back_url cancel_url=back_url submit_text="Save" %}
+  {% include "components/crud_model_form.html" with title="New property" form=form back_url=list_url back_label="Properties" cancel_url=list_url submit_text="Save" %}
 {% endif %}
 {% endblock %}
-

@@ -5,14 +5,21 @@ from decimal import Decimal
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import DecimalField, F, Q, Sum, Value
+from django.db.models.deletion import ProtectedError
 from django.db.models.functions import Coalesce
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
+from apps.accounting.models import UnitExpense, UnitInvoice
+from apps.accounting.services import (
+	pnl_charts_context,
+	scoped_top_performers_context,
+	units_with_pnl_for_property,
+)
 from apps.core.mixins import PostOnlyDeleteMixin, TenantSchemaRequiredMixin, WorkItemContextMixin
 from apps.properties.forms import PropertyForm, UnitForm
-from apps.properties.models import Property, Unit
+from apps.properties.models import Property, Unit, UnitStatus
 
 
 class PropertyListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView):
@@ -89,7 +96,10 @@ class PropertyDetailView(WorkItemContextMixin, TenantSchemaRequiredMixin, LoginR
 
 	def get_context_data(self, **kwargs):
 		ctx = super().get_context_data(**kwargs)
-		ctx["units"] = self.object.units.all().order_by("unit_number")
+		prop = self.object
+		ctx["units_pnl"] = units_with_pnl_for_property(prop)
+		ctx.update(pnl_charts_context(self.request, Unit.objects.filter(property=prop)))
+		ctx.update(scoped_top_performers_context(self.request, scope="property", property=prop))
 		return ctx
 
 
@@ -141,11 +151,15 @@ class UnitListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView):
 		q = (self.request.GET.get("q") or "").strip()
 		if q:
 			qs = qs.filter(Q(unit_number__icontains=q) | Q(property__name__icontains=q) | Q(external_id__icontains=q))
+		status = (self.request.GET.get("status") or "").strip()
+		if status in UnitStatus.values:
+			qs = qs.filter(status=status)
 		return qs
 
 	def get_context_data(self, **kwargs):
 		ctx = super().get_context_data(**kwargs)
 		ctx["q"] = (self.request.GET.get("q") or "").strip()
+		ctx["status"] = (self.request.GET.get("status") or "").strip()
 		return ctx
 
 
@@ -153,6 +167,31 @@ class UnitDetailView(WorkItemContextMixin, TenantSchemaRequiredMixin, LoginRequi
 	model = Unit
 	template_name = "properties/unit_detail.html"
 	context_object_name = "unit"
+
+	def get_queryset(self):
+		return Unit.objects.select_related(
+			"property",
+			"estate_agent",
+			"estate_agent__contact",
+			"managing_agent",
+			"managing_agent__contact",
+			"rental_agent",
+			"rental_agent__contact",
+		)
+
+	def get_context_data(self, **kwargs):
+		ctx = super().get_context_data(**kwargs)
+		u = self.object
+		ctx["unit_invoices"] = UnitInvoice.objects.filter(unit=u).order_by("-issue_date", "-created_at")[:100]
+		ctx["unit_expenses"] = (
+			UnitExpense.objects.filter(unit=u)
+			.order_by("-expense_date", "-created_at")
+			.prefetch_related("documents")[:100]
+		)
+		charts = pnl_charts_context(self.request, Unit.objects.filter(pk=u.pk))
+		ctx.update(charts)
+		ctx["net_income"] = charts["net"]
+		return ctx
 
 
 class UnitCreateView(TenantSchemaRequiredMixin, LoginRequiredMixin, CreateView):
@@ -214,6 +253,24 @@ class UnitDeleteView(TenantSchemaRequiredMixin, LoginRequiredMixin, PostOnlyDele
 	model = Unit
 	success_url = reverse_lazy("properties:unit_list")
 
-	def delete(self, request, *args, **kwargs):
+	def form_valid(self, form):
+		# Django 5.2+ BaseDeleteView deletes in form_valid(), not delete() — catch PROTECT there.
+		try:
+			response = super().form_valid(form)
+		except ProtectedError:
+			lease_count = self.object.leases.count()
+			if lease_count:
+				messages.error(
+					self.request,
+					"This unit cannot be deleted while it still has one or more leases "
+					f"({lease_count} on file). Remove or end those leases first, then try again.",
+				)
+			else:
+				messages.error(
+					self.request,
+					"This unit cannot be deleted because other records still depend on it. "
+					"Remove or reassign those records first, then try again.",
+				)
+			return redirect("properties:unit_detail", pk=self.object.pk)
 		messages.success(self.request, "Unit deleted.")
-		return super().delete(request, *args, **kwargs)
+		return response

@@ -1,0 +1,8 @@
+{# Requires pnl_chart_lib.html on the page. Pass chart_data_id and chart_canvas_id. #}
+<script defer>
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.CrmCharts) {
+    window.CrmCharts.initCumulativeFromJson("{{ chart_data_id }}", "{{ chart_canvas_id }}");
+  }
+});
+</script>

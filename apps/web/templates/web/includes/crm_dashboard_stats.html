@@ -1,0 +1,68 @@
+{% load money_extras %}
+<div class="crm-dashboard__metrics">
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+      <div class="card crm-card crm-dashboard-metric h-100 border-primary border-opacity-25 position-relative">
+        <div class="card-body">
+          <div class="crm-dashboard-metric__label">Total asset value</div>
+          <div class="crm-dashboard-metric__value">{{ total_asset_value|zar }}</div>
+          <a class="stretched-link" href="{% url 'portfolio:list' %}" aria-label="View portfolios"></a>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card crm-card crm-dashboard-metric h-100 border-danger border-opacity-50 position-relative">
+        <div class="card-body">
+          <div class="crm-dashboard-metric__label">Empty units</div>
+          <div class="crm-dashboard-metric__value">{{ empty_units_count }}</div>
+          <a class="stretched-link" href="{% url 'properties:unit_list' %}?status=vacant" aria-label="View empty units"></a>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card crm-card crm-dashboard-metric h-100 border-warning border-opacity-50 position-relative">
+        <div class="card-body">
+          <div class="crm-dashboard-metric__label">Leases expiring</div>
+          <div class="crm-dashboard-metric__value">{{ leases_expiring_count }}</div>
+          <a class="stretched-link" href="{% url 'leases:list' %}?filter=expiring" aria-label="View expiring leases"></a>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="card crm-card crm-dashboard-metric h-100 border-info border-opacity-50 position-relative">
+        <div class="card-body">
+          <div class="crm-dashboard-metric__label">Month-to-month</div>
+          <div class="crm-dashboard-metric__value">{{ month_to_month_leases_count }}</div>
+          <a class="stretched-link" href="{% url 'leases:list' %}?filter=month_to_month" aria-label="View month-to-month leases"></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <div class="card crm-card crm-dashboard-metric h-100 border-primary border-opacity-25">
+        <div class="card-body">
+          <div class="crm-dashboard-metric__label">Invoices{% if selected_year %} · {{ selected_year }}{% endif %}</div>
+          <div class="crm-dashboard-metric__value">{{ invoices_total|zar }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card crm-card crm-dashboard-metric h-100 border-danger border-opacity-25">
+        <div class="card-body">
+          <div class="crm-dashboard-metric__label">Expenses{% if selected_year %} · {{ selected_year }}{% endif %}</div>
+          <div class="crm-dashboard-metric__value">{{ expenses_total|zar }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card crm-card crm-dashboard-metric h-100 {% if net >= 0 %}border-success{% else %}border-warning{% endif %} border-opacity-50">
+        <div class="card-body">
+          <div class="crm-dashboard-metric__label">Net P&amp;L{% if selected_year %} · {{ selected_year }}{% endif %}</div>
+          <div class="crm-dashboard-metric__value">{{ net|zar }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Rental agents{% endblock %}
+
+{% block content %}
+<div class="crm-page">
+  {% url 'rental_agents:create' as create_url %}
+  {% include "components/crm_list_header.html" with title="Rental agents" subtitle="Letting and rental agency contacts" create_url=create_url create_label="New rental agent" %}
+
+  {% url 'rental_agents:list' as clear_url %}
+  {% include "components/crm_search.html" with q=q placeholder="Search name, email, phone, reference..." clear_url=clear_url %}
+
+  <div class="card crm-card crm-table-card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Reference</th>
+            <th>Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in agents %}
+          <tr>
+            <td><a href="{% url 'rental_agents:detail' a.pk %}" class="text-decoration-none">{{ a.name }}</a></td>
+            <td>{{ a.email|default:"—" }}</td>
+            <td>{{ a.phone|default:"—" }}</td>
+            <td>{{ a.reference|default:"—" }}</td>
+            <td>{% if a.is_active %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-secondary">Inactive</span>{% endif %}</td>
+            <td class="text-end crm-row-actions">
+              <a class="btn btn-sm btn-outline-secondary" href="{% url 'rental_agents:update' a.pk %}">Edit</a>
+              <form method="post" action="{% url 'rental_agents:delete' a.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete this rental agent?">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+            {% url 'rental_agents:create' as empty_create_url %}
+            {% include "components/crm_empty_row.html" with colspan=6 message="No rental agents yet." create_url=empty_create_url create_label="New rental agent" %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% include "components/crm_pagination.html" %}
+</div>
+{% endblock %}

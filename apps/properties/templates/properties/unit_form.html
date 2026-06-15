@@ -3,11 +3,13 @@
 {% block title %}{% if form.instance.pk %}Edit unit{% else %}New unit{% endif %}{% endblock %}
 
 {% block content %}
-{% url "properties:unit_list" as back_url %}
+{% url "properties:unit_list" as list_url %}
 {% if form.instance.pk %}
-  {% include "components/crud_model_form.html" with title="Edit unit" back_url=back_url cancel_url=back_url submit_text="Save" %}
+  {% url "properties:unit_detail" form.instance.pk as back_url %}
+  {% with unit_label="Unit "|add:form.instance.unit_number %}
+  {% include "components/crud_model_form.html" with title="Edit unit" form=form back_url=back_url back_label=unit_label cancel_url=back_url submit_text="Save" %}
+  {% endwith %}
 {% else %}
-  {% include "components/crud_model_form.html" with title="New unit" back_url=back_url cancel_url=back_url submit_text="Save" %}
+  {% include "components/crud_model_form.html" with title="New unit" form=form back_url=list_url back_label="Units" cancel_url=list_url submit_text="Save" %}
 {% endif %}
 {% endblock %}
-

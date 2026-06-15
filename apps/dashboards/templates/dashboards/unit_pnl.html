@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load user_extras money_extras %}
+
+{% block title %}Unit P&amp;L{% endblock %}
+
+{% block content %}
+<div class="crm-page">
+  {% url 'crm_dashboard' as dash_url %}
+  {% url 'properties:property_list' as prop_list_url %}
+  {% url 'properties:property_detail' unit.property.pk as prop_detail_url %}
+  {% url 'properties:unit_detail' unit.pk as detail_url %}
+  {% crm_breadcrumb_nav "Dashboard" dash_url "Properties" prop_list_url unit.property.name prop_detail_url "Unit "|add:unit.unit_number detail_url "P&amp;L" %}
+
+  {% with page_title="Profit & loss — Unit "|add:unit.unit_number %}
+  {% include "components/crm_subpage_header.html" with title=page_title description="Invoices and expenses recorded for this unit." %}
+  {% endwith %}
+
+  {% include "dashboards/includes/pnl_charts_section.html" with section_title="Profit & loss" chart_prefix="unit-pnl" %}
+
+  {% include "components/work_item_panels.html" %}
+</div>
+{% endblock %}
+
+{% block js %}
+{% include "dashboards/includes/pnl_charts_js.html" with chart_prefix="unit-pnl" %}
+{% endblock %}

@@ -44,7 +44,7 @@ SHARED_APPS = (
 	"apps.entitlements.apps.EntitlementsConfig",
 	
 	# Shared data models required by AUTH_USER_MODEL and admin on public schema
-	"apps.core",
+	"apps.core.apps.CoreConfig",
 	"apps.addresses",
 	"apps.contacts",
 	"apps.accounts",
@@ -73,13 +73,19 @@ TENANT_APPS = (
 	"apps.activity.apps.ActivityConfig",
 
 	# Tenant business/domain apps
-	"apps.core",
+	"apps.core.apps.CoreConfig",
 	"apps.accounts",
 	"apps.addresses",
 	"apps.contacts",
 	"apps.portfolio",
 	"apps.properties",
+	"apps.accounting.apps.AccountingConfig",
+	"apps.dashboards.apps.DashboardsConfig",
 	"apps.leases",
+	"apps.estate_agents.apps.EstateAgentsConfig",
+	"apps.managing_agents.apps.ManagingAgentsConfig",
+	"apps.rental_agents.apps.RentalAgentsConfig",
+	"apps.contractors.apps.ContractorsConfig",
 	"apps.documents",
 	"apps.todo",
 	"apps.branding",

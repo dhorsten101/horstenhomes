@@ -54,6 +54,46 @@
   };
 
   ready(() => {
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : "";
+    if (csrfToken) {
+      document.body.addEventListener("htmx:configRequest", (event) => {
+        event.detail.headers["X-CSRFToken"] = csrfToken;
+      });
+    }
+
+    function handleAddressCreated(detail) {
+      if (!detail || !detail.id) return;
+      const select = document.getElementById(detail.fieldId || "");
+      if (select) {
+        const value = String(detail.id);
+        let option = Array.from(select.options).find((opt) => opt.value === value);
+        if (!option) {
+          option = new Option(detail.label || "New address", value);
+          select.add(option);
+        } else if (detail.label) {
+          option.textContent = detail.label;
+        }
+        select.value = value;
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      const modalEl = document.getElementById("addressQuickCreateModal");
+      if (modalEl && window.bootstrap) {
+        window.bootstrap.Modal.getInstance(modalEl)?.hide();
+      }
+      toast("success", "Address saved.");
+    }
+
+    function parseHxTrigger(xhr) {
+      const raw = xhr && xhr.getResponseHeader ? xhr.getResponseHeader("HX-Trigger") : null;
+      if (!raw) return null;
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        return null;
+      }
+    }
+
     // Render Django messages as toasts (if present)
     const root = document.getElementById("django-messages");
     if (root) {
@@ -96,6 +136,22 @@
       const xhr = evt.detail && evt.detail.xhr;
       const status = xhr ? xhr.status : 0;
       toast("error", `Request failed (${status})`);
+    });
+
+    document.body.addEventListener("htmx:afterRequest", (evt) => {
+      const xhr = evt.detail && evt.detail.xhr;
+      const elt = evt.detail && evt.detail.elt;
+      if (!xhr || !elt || !elt.matches || !elt.matches("[data-address-quick-create]")) return;
+      if (xhr.status === 204) {
+        const triggers = parseHxTrigger(xhr);
+        if (triggers && triggers.addressCreated) {
+          handleAddressCreated(triggers.addressCreated);
+        }
+      }
+    });
+
+    document.body.addEventListener("addressCreated", (event) => {
+      handleAddressCreated(event.detail || {});
     });
   });
 })();

@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import json
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from django.http import HttpResponse
+from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
+from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from apps.addresses.forms import AddressForm
@@ -79,3 +84,43 @@ class AddressDeleteView(TenantSchemaRequiredMixin, LoginRequiredMixin, PostOnlyD
 	def delete(self, request, *args, **kwargs):
 		messages.success(self.request, "Address deleted.")
 		return super().delete(request, *args, **kwargs)
+
+
+class AddressQuickCreateView(TenantSchemaRequiredMixin, LoginRequiredMixin, View):
+	"""HTMX modal: create an address and select it on the parent form."""
+
+	template_name = "addresses/includes/address_quick_create_form.html"
+
+	def get(self, request):
+		return render(
+			request,
+			self.template_name,
+			{
+				"form": AddressForm(),
+				"field_id": (request.GET.get("field_id") or "").strip(),
+			},
+		)
+
+	def post(self, request):
+		field_id = (request.POST.get("field_id") or "").strip()
+		form = AddressForm(request.POST)
+		if not form.is_valid():
+			return render(
+				request,
+				self.template_name,
+				{"form": form, "field_id": field_id},
+				status=422,
+				headers={"HX-Retarget": "#addressQuickCreateModalBody", "HX-Reswap": "innerHTML"},
+			)
+		address = form.save()
+		response = HttpResponse(status=204)
+		response["HX-Trigger"] = json.dumps(
+			{
+				"addressCreated": {
+					"id": address.pk,
+					"label": str(address),
+					"fieldId": field_id,
+				}
+			}
+		)
+		return response

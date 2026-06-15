@@ -9,7 +9,12 @@ from django.db.models.functions import Coalesce
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from apps.core.mixins import PostOnlyDeleteMixin, TenantSchemaRequiredMixin, WorkItemContextMixin
+from apps.accounting.services import (
+	pnl_charts_context,
+	properties_with_pnl_for_portfolio,
+	scoped_top_performers_context,
+)
+from apps.core.mixins import PostOnlyDeleteMixin, TenantSchemaRequiredMixin
 from apps.portfolio.forms import PortfolioForm
 from apps.portfolio.models import Portfolio
 from apps.properties.models import Property, Unit
@@ -69,7 +74,7 @@ class PortfolioListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView)
 		return ctx
 
 
-class PortfolioDetailView(WorkItemContextMixin, TenantSchemaRequiredMixin, LoginRequiredMixin, DetailView):
+class PortfolioDetailView(TenantSchemaRequiredMixin, LoginRequiredMixin, DetailView):
 	model = Portfolio
 	template_name = "portfolio/portfolio_detail.html"
 	context_object_name = "portfolio"
@@ -116,8 +121,7 @@ class PortfolioDetailView(WorkItemContextMixin, TenantSchemaRequiredMixin, Login
 		ctx = super().get_context_data(**kwargs)
 		p = self.object
 
-		# Properties in this portfolio (include rollups)
-		ctx["properties"] = (
+		properties = list(
 			Property.objects.filter(portfolio=p)
 			.select_related("portfolio", "address")
 			.annotate(
@@ -141,7 +145,15 @@ class PortfolioDetailView(WorkItemContextMixin, TenantSchemaRequiredMixin, Login
 			)
 			.order_by("-updated_at")
 		)
-
+		pnl_by_id = {row.pk: row for row in properties_with_pnl_for_portfolio(p)}
+		for prop in properties:
+			pnl = pnl_by_id.get(prop.pk)
+			prop.pnl_invoices = pnl.pnl_invoices if pnl else Decimal("0.00")
+			prop.pnl_expenses = pnl.pnl_expenses if pnl else Decimal("0.00")
+			prop.pnl_net = pnl.pnl_net if pnl else Decimal("0.00")
+		ctx["properties"] = properties
+		ctx.update(pnl_charts_context(self.request, Unit.objects.filter(property__portfolio=p)))
+		ctx.update(scoped_top_performers_context(self.request, scope="portfolio", portfolio=p))
 		return ctx
 
 
