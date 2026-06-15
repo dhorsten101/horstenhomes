@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count, DecimalField, F, OuterRef, Q, Subquery, Sum, Value
+from django.db.models import Count, DecimalField, OuterRef, Q, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
@@ -17,6 +17,10 @@ from apps.accounting.services import (
 from apps.core.mixins import PostOnlyDeleteMixin, TenantSchemaRequiredMixin
 from apps.portfolio.forms import PortfolioForm
 from apps.portfolio.models import Portfolio
+from apps.portfolio.services import (
+	annotate_portfolios_with_total_asset_value,
+	annotate_properties_with_total_asset_value,
+)
 from apps.properties.models import Property, Unit
 
 
@@ -58,11 +62,9 @@ class PortfolioListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView)
 			.annotate(property_count=Count("properties"))
 			.annotate(site_value=Subquery(site_value_subquery))
 			.annotate(unit_value=Subquery(unit_value_subquery))
-			.annotate(
-				total_asset_value=Coalesce("site_value", Value(Decimal("0.00"))) + Coalesce("unit_value", Value(Decimal("0.00")))
-			)
-			.order_by("-updated_at")
 		)
+		qs = annotate_portfolios_with_total_asset_value(qs)
+		qs = qs.order_by("-updated_at")
 		q = (self.request.GET.get("q") or "").strip()
 		if q:
 			qs = qs.filter(Q(name__icontains=q) | Q(description__icontains=q))
@@ -106,44 +108,23 @@ class PortfolioDetailView(TenantSchemaRequiredMixin, LoginRequiredMixin, DetailV
 			.values("total")[:1]
 		)
 
-		return (
+		qs = (
 			super()
 			.get_queryset()
 			.select_related("owner_contact")
 			.annotate(site_value=Subquery(site_value_subquery))
 			.annotate(unit_value=Subquery(unit_value_subquery))
-			.annotate(
-				total_asset_value=Coalesce("site_value", Value(Decimal("0.00"))) + Coalesce("unit_value", Value(Decimal("0.00")))
-			)
 		)
+		return annotate_portfolios_with_total_asset_value(qs)
 
 	def get_context_data(self, **kwargs):
 		ctx = super().get_context_data(**kwargs)
 		p = self.object
 
 		properties = list(
-			Property.objects.filter(portfolio=p)
-			.select_related("portfolio", "address")
-			.annotate(
-				units_purchase_total=Coalesce(
-					Sum("units__purchase_price"),
-					Value(Decimal("0.00")),
-					output_field=DecimalField(max_digits=14, decimal_places=2),
-				)
-			)
-			.annotate(
-				total_asset_value=Coalesce(
-					F("purchase_price"),
-					Value(Decimal("0.00")),
-					output_field=DecimalField(max_digits=14, decimal_places=2),
-				)
-				+ Coalesce(
-					F("units_purchase_total"),
-					Value(Decimal("0.00")),
-					output_field=DecimalField(max_digits=14, decimal_places=2),
-				)
-			)
-			.order_by("-updated_at")
+			annotate_properties_with_total_asset_value(
+				Property.objects.filter(portfolio=p).select_related("portfolio", "address")
+			).order_by("-updated_at")
 		)
 		pnl_by_id = {row.pk: row for row in properties_with_pnl_for_portfolio(p)}
 		for prop in properties:

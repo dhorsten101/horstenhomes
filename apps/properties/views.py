@@ -1,25 +1,47 @@
 from __future__ import annotations
 
-from decimal import Decimal
-
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import DecimalField, F, Q, Sum, Value
+from django.db.models import Q
 from django.db.models.deletion import ProtectedError
-from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from apps.accounting.models import UnitExpense, UnitInvoice
 from apps.accounting.services import (
+	expenses_for_property,
+	invoices_for_property,
 	pnl_charts_context,
 	scoped_top_performers_context,
 	units_with_pnl_for_property,
 )
 from apps.core.mixins import PostOnlyDeleteMixin, TenantSchemaRequiredMixin, WorkItemContextMixin
+from apps.portfolio.services import (
+	annotate_properties_with_total_asset_value,
+	capital_investments_for_property,
+	capital_investments_for_unit,
+	unit_total_asset_value,
+)
 from apps.properties.forms import PropertyForm, UnitForm
 from apps.properties.models import Property, Unit, UnitStatus
+
+
+def _detail_tab_from_request(request) -> str:
+	tab = (request.GET.get("tab") or "overview").strip()
+	if tab in {"capital", "documents", "invoices", "expenses"}:
+		return tab
+	return "overview"
+
+
+def _detail_tab_urls(base_url: str) -> dict[str, str]:
+	return {
+		"overview_url": base_url,
+		"invoices_url": f"{base_url}?tab=invoices",
+		"expenses_url": f"{base_url}?tab=expenses",
+		"capital_url": f"{base_url}?tab=capital",
+		"documents_url": f"{base_url}?tab=documents",
+	}
 
 
 class PropertyListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView):
@@ -29,33 +51,12 @@ class PropertyListView(TenantSchemaRequiredMixin, LoginRequiredMixin, ListView):
 	paginate_by = 25
 
 	def get_queryset(self):
-		qs = (
-			Property.objects.select_related("portfolio", "address")
-			.annotate(
-				units_purchase_total=Coalesce(
-					Sum("units__purchase_price"),
-					Value(Decimal("0.00")),
-					output_field=DecimalField(max_digits=14, decimal_places=2),
-				)
-			)
-			.annotate(
-				total_asset_value=Coalesce(
-					F("purchase_price"),
-					Value(Decimal("0.00")),
-					output_field=DecimalField(max_digits=14, decimal_places=2),
-				)
-				+ Coalesce(
-					F("units_purchase_total"),
-					Value(Decimal("0.00")),
-					output_field=DecimalField(max_digits=14, decimal_places=2),
-				)
-			)
-			.order_by("-updated_at")
-		)
+		qs = Property.objects.select_related("portfolio", "address")
+		qs = annotate_properties_with_total_asset_value(qs)
 		q = (self.request.GET.get("q") or "").strip()
 		if q:
 			qs = qs.filter(Q(name__icontains=q) | Q(external_id__icontains=q))
-		return qs
+		return qs.order_by("-updated_at")
 
 	def get_context_data(self, **kwargs):
 		ctx = super().get_context_data(**kwargs)
@@ -69,37 +70,28 @@ class PropertyDetailView(WorkItemContextMixin, TenantSchemaRequiredMixin, LoginR
 	context_object_name = "property"
 
 	def get_queryset(self):
-		return (
-			super()
-			.get_queryset()
-			.select_related("portfolio", "address")
-			.annotate(
-				units_purchase_total=Coalesce(
-					Sum("units__purchase_price"),
-					Value(Decimal("0.00")),
-					output_field=DecimalField(max_digits=14, decimal_places=2),
-				)
-			)
-			.annotate(
-				total_asset_value=Coalesce(
-					F("purchase_price"),
-					Value(Decimal("0.00")),
-					output_field=DecimalField(max_digits=14, decimal_places=2),
-				)
-				+ Coalesce(
-					F("units_purchase_total"),
-					Value(Decimal("0.00")),
-					output_field=DecimalField(max_digits=14, decimal_places=2),
-				)
-			)
-		)
+		qs = super().get_queryset().select_related("portfolio", "address")
+		return annotate_properties_with_total_asset_value(qs)
 
 	def get_context_data(self, **kwargs):
 		ctx = super().get_context_data(**kwargs)
 		prop = self.object
 		ctx["units_pnl"] = units_with_pnl_for_property(prop)
-		ctx.update(pnl_charts_context(self.request, Unit.objects.filter(property=prop)))
+		charts = pnl_charts_context(self.request, Unit.objects.filter(property=prop))
+		ctx.update(charts)
 		ctx.update(scoped_top_performers_context(self.request, scope="property", property=prop))
+		property_url = reverse("properties:property_detail", kwargs={"pk": prop.pk})
+		ctx["detail_tab"] = _detail_tab_from_request(self.request)
+		ctx.update(_detail_tab_urls(property_url))
+		ctx["property_invoices"] = invoices_for_property(prop)
+		ctx["property_expenses"] = expenses_for_property(prop)
+		ctx["capital_investments"] = capital_investments_for_property(prop)
+		ctx["capital_investment_create_url"] = reverse(
+			"accounting:property_capital_investment_create",
+			kwargs={"property_pk": prop.pk},
+		)
+		if "document_upload_form" in ctx:
+			ctx["document_upload_form"].initial["next"] = ctx["documents_url"]
 		return ctx
 
 
@@ -191,6 +183,19 @@ class UnitDetailView(WorkItemContextMixin, TenantSchemaRequiredMixin, LoginRequi
 		charts = pnl_charts_context(self.request, Unit.objects.filter(pk=u.pk))
 		ctx.update(charts)
 		ctx["net_income"] = charts["net"]
+		ctx["unit_total_asset_value"] = unit_total_asset_value(u)
+		unit_url = reverse("properties:unit_detail", kwargs={"pk": u.pk})
+		ctx["detail_tab"] = _detail_tab_from_request(self.request)
+		ctx.update(_detail_tab_urls(unit_url))
+		ctx["invoice_create_url"] = reverse("accounting:unit_invoice_create", kwargs={"unit_pk": u.pk})
+		ctx["expense_create_url"] = reverse("accounting:unit_expense_create", kwargs={"unit_pk": u.pk})
+		ctx["capital_investments"] = capital_investments_for_unit(u)
+		ctx["capital_investment_create_url"] = reverse(
+			"accounting:unit_capital_investment_create",
+			kwargs={"unit_pk": u.pk},
+		)
+		if "document_upload_form" in ctx:
+			ctx["document_upload_form"].initial["next"] = ctx["documents_url"]
 		return ctx
 
 

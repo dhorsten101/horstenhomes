@@ -1,0 +1,137 @@
+{% load money_extras %}
+{# Expects: expenses. Optional: show_all, in_tab, show_unit, create_url, preview_extra_class #}
+
+{% if in_tab %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+  <div>
+    <h2 class="h5 mb-0">Expenses</h2>
+    <p class="text-muted small mb-0">
+      {% if show_unit %}All expenses recorded for units on this property.{% else %}Costs recorded for this unit.{% endif %}
+    </p>
+  </div>
+  {% if create_url %}
+    <a class="btn btn-primary btn-sm" href="{{ create_url }}">
+      <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Add expense
+    </a>
+  {% endif %}
+</div>
+{% else %}
+<h2 class="h6 mb-2">
+  Expenses
+  {% if expenses %}<span class="text-muted fw-normal small">({{ expenses|length }})</span>{% endif %}
+</h2>
+{% endif %}
+
+{% if in_tab %}
+<div class="card crm-card crm-table-card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead>
+        <tr>
+          <th>Date</th>
+          {% if show_unit %}<th>Unit</th>{% endif %}
+          <th class="text-end">Amount</th>
+          <th>Description</th>
+          <th>Attachment</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in expenses %}
+          <tr>
+            <td>{{ row.expense_date|date:"Y-m-d" }}</td>
+            {% if show_unit %}
+              <td><a href="{% url 'properties:unit_detail' row.unit.pk %}?tab=expenses">{{ row.unit.unit_number }}</a></td>
+            {% endif %}
+            <td class="text-end">{{ row.amount|zar }}</td>
+            <td>{{ row.description|default:"—" }}</td>
+            <td class="text-nowrap small">
+              {% for d in row.documents.all %}
+                {% if forloop.first %}
+                  <a href="{% url 'documents:download' d.pk %}">Download</a>
+                {% endif %}
+              {% empty %}
+                —
+              {% endfor %}
+              {% if row.documents.count > 1 %}
+                <span class="text-muted">(+{{ row.documents.count|add:"-1" }})</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="{% if show_unit %}5{% else %}4{% endif %}" class="text-center text-muted py-4">
+              No expenses yet.
+              {% if create_url %}<a href="{{ create_url }}">Add one</a>.{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% elif expenses %}
+  <div class="table-responsive">
+    <table class="table table-sm table-striped mb-0">
+      <thead><tr><th>Date</th><th class="text-end">Amount</th><th>Description</th><th>Attachment</th></tr></thead>
+      <tbody>
+        {% for row in expenses %}
+          {% if show_all or forloop.counter <= 3 %}
+            <tr>
+              <td>{{ row.expense_date|date:"Y-m-d" }}</td>
+              <td class="text-end">{{ row.amount|zar }}</td>
+              <td>{{ row.description|default:"—" }}</td>
+              <td class="text-nowrap small">
+                {% for d in row.documents.all %}
+                  {% if forloop.first %}
+                    <a href="{% url 'documents:download' d.pk %}">Download</a>
+                  {% endif %}
+                {% empty %}
+                  —
+                {% endfor %}
+                {% if row.documents.count > 1 %}
+                  <span class="text-muted">(+{{ row.documents.count|add:"-1" }})</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if not show_all and expenses|length > 3 %}
+    <div class="collapse {{ preview_extra_class }}">
+      <div class="table-responsive">
+        <table class="table table-sm table-striped mb-0">
+          <tbody>
+            {% for row in expenses %}
+              {% if forloop.counter > 3 %}
+                <tr>
+                  <td>{{ row.expense_date|date:"Y-m-d" }}</td>
+                  <td class="text-end">{{ row.amount|zar }}</td>
+                  <td>{{ row.description|default:"—" }}</td>
+                  <td class="text-nowrap small">
+                    {% for d in row.documents.all %}
+                      {% if forloop.first %}
+                        <a href="{% url 'documents:download' d.pk %}">Download</a>
+                      {% endif %}
+                    {% empty %}
+                      —
+                    {% endfor %}
+                    {% if row.documents.count > 1 %}
+                      <span class="text-muted">(+{{ row.documents.count|add:"-1" }})</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% endif %}
+  {% if not show_all %}
+    {% include "components/crm_preview_rows_toggle.html" with items=expenses preview_extra_class=preview_extra_class %}
+  {% endif %}
+{% else %}
+  <p class="text-muted small mb-0">No expenses yet.</p>
+{% endif %}

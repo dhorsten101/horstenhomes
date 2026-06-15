@@ -11,24 +11,6 @@
           <p class="text-muted small mb-0">Money in, money out, and profit added up month by month.</p>
           {% endif %}
         </div>
-        {% if pnl_chart_granularity == "yearly" %}
-        <div class="form-check form-switch mb-0 crm-chart-predict-toggle">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            role="switch"
-            id="{{ chart_canvas_id }}-predict"
-            data-chart-canvas="{{ chart_canvas_id }}"
-            data-chart-data="{{ chart_data_id }}"
-          >
-          <label class="form-check-label small" for="{{ chart_canvas_id }}-predict">15-year projections</label>
-        </div>
-        {% endif %}
-      </div>
-      {% else %}
-      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
-        <div class="crm-dashboard-chart-title mb-0">Running totals</div>
-        {% if pnl_chart_granularity == "yearly" %}
         <div class="form-check form-switch mb-0 crm-chart-predict-toggle">
           <input
             class="form-check-input"
@@ -40,7 +22,21 @@
           >
           <label class="form-check-label small" for="{{ chart_canvas_id }}-predict">Projections</label>
         </div>
-        {% endif %}
+      </div>
+      {% else %}
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+        <div class="crm-dashboard-chart-title mb-0">Running totals</div>
+        <div class="form-check form-switch mb-0 crm-chart-predict-toggle">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            role="switch"
+            id="{{ chart_canvas_id }}-predict"
+            data-chart-canvas="{{ chart_canvas_id }}"
+            data-chart-data="{{ chart_data_id }}"
+          >
+          <label class="form-check-label small" for="{{ chart_canvas_id }}-predict">Projections</label>
+        </div>
       </div>
       {% endif %}
       {% include "dashboards/includes/pnl_chart_legend_cumulative.html" %}

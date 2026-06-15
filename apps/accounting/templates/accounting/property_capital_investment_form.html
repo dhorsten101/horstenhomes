@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block title %}Capital investment{% endblock %}
+
+{% block content %}
+{% url "properties:property_detail" property.pk as back_url %}
+{% include "components/crud_model_form.html" with title=form_title form=form back_url=back_url|add:"?tab=capital" back_label=property.name cancel_url=back_url|add:"?tab=capital" submit_text="Save investment" %}
+{% endblock %}

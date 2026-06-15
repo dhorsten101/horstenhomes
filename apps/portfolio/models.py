@@ -3,7 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from django.db import models
-from django.db.models import DecimalField, Sum, Value
+from django.db.models import DecimalField, Q, Sum, Value
 from django.db.models.functions import Coalesce
 
 from apps.core.models import TimeStampedUUIDModel
@@ -72,4 +72,19 @@ class Portfolio(TimeStampedUUIDModel):
 			or Decimal("0.00")
 		)
 
-		return site_total + unit_total
+		from apps.accounting.models import AssetCapitalInvestment
+
+		capital_total = (
+			AssetCapitalInvestment.objects.filter(
+				Q(related_property__portfolio=self) | Q(unit__property__portfolio=self)
+			).aggregate(
+				total=Coalesce(
+					Sum("amount"),
+					Value(Decimal("0.00")),
+					output_field=DecimalField(max_digits=14, decimal_places=2),
+				)
+			)["total"]
+			or Decimal("0.00")
+		)
+
+		return site_total + unit_total + capital_total

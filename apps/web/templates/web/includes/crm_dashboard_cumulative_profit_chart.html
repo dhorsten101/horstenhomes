@@ -1,0 +1,27 @@
+{% if cumulative_profit_chart %}
+  <div class="card crm-card crm-chart-card h-100 mb-0 w-100">
+    <div class="card-body crm-dashboard-chart-body">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+        <div>
+          <div class="crm-dashboard-chart-title mb-0">Cumulative profit &amp; capital growth</div>
+          <p class="text-muted small mb-0 mt-1">Yearly running totals with total asset value today as a reference line.</p>
+        </div>
+        <div class="form-check form-switch mb-0 crm-chart-predict-toggle">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            role="switch"
+            id="crm-dashboard-cumulative-profit-chart-predict"
+            data-chart-canvas="crm-dashboard-cumulative-profit-chart"
+            data-chart-data="crm-dashboard-cumulative-profit-chart-data"
+          >
+          <label class="form-check-label small" for="crm-dashboard-cumulative-profit-chart-predict">Projections</label>
+        </div>
+      </div>
+      <div class="crm-chart-wrap crm-chart-wrap--asset-lines">
+        <canvas id="crm-dashboard-cumulative-profit-chart" aria-label="Cumulative profit chart"></canvas>
+      </div>
+    </div>
+  </div>
+  {{ cumulative_profit_chart|json_script:"crm-dashboard-cumulative-profit-chart-data" }}
+{% endif %}

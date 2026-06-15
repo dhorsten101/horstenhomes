@@ -27,6 +27,21 @@
   {% include "web/includes/crm_dashboard_stats.html" %}
   {% include "web/includes/crm_dashboard_top_performers.html" %}
 
+  {% if asset_acquisition_chart or cumulative_profit_chart %}
+  <div class="row g-3 mb-3 crm-dashboard__charts">
+    {% if asset_acquisition_chart %}
+    <div class="col-lg-6">
+      {% include "web/includes/crm_dashboard_asset_chart.html" %}
+    </div>
+    {% endif %}
+    {% if cumulative_profit_chart %}
+    <div class="col-lg-6">
+      {% include "web/includes/crm_dashboard_cumulative_profit_chart.html" %}
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
   {% if monthly_pnl_chart or cumulative_pnl_chart %}
   <div class="row g-3 crm-dashboard__charts">
     {% if monthly_pnl_chart %}
@@ -47,5 +62,20 @@
 {% endblock %}
 
 {% block js %}
+{% if asset_acquisition_chart or cumulative_profit_chart %}
+{% if not monthly_pnl_chart and not cumulative_pnl_chart %}
+{% include "dashboards/includes/pnl_chart_lib.html" %}
+{% endif %}
+{% endif %}
 {% include "dashboards/includes/pnl_charts_js.html" with chart_prefix="crm-dashboard" %}
+{% if asset_acquisition_chart or cumulative_profit_chart %}
+<script defer>
+document.addEventListener("DOMContentLoaded", () => {
+  if (!window.CrmCharts) return;
+  {% if asset_acquisition_chart %}
+  window.CrmCharts.initAssetAcquisitionFromJson("crm-dashboard-asset-chart-data", "crm-dashboard-asset-chart");
+  {% endif %}
+});
+</script>
+{% endif %}
 {% endblock %}

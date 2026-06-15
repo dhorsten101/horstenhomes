@@ -16,6 +16,17 @@
   {% url 'properties:property_delete' property.pk as delete_url %}
   {% include "components/crm_detail_header.html" with title=property.name updated=property.updated_at edit_url=edit_url delete_url=delete_url delete_confirm="Delete this property?" pnl_url=pnl_url %}
 
+  {% include "components/crm_detail_tabs.html" %}
+
+  {% if detail_tab == "capital" %}
+    {% include "accounting/includes/capital_investments_tab.html" with create_url=capital_investment_create_url show_asset=True %}
+  {% elif detail_tab == "documents" %}
+    {% include "components/work_item_panels.html" with in_tab=True show_all=True %}
+  {% elif detail_tab == "invoices" %}
+    {% include "accounting/includes/unit_invoices_panel.html" with invoices=property_invoices show_unit=True in_tab=True show_all=True %}
+  {% elif detail_tab == "expenses" %}
+    {% include "accounting/includes/unit_expenses_panel.html" with expenses=property_expenses show_unit=True in_tab=True show_all=True %}
+  {% else %}
   {% include "dashboards/includes/pnl_charts_section.html" with section_title="Profit & loss (all units on this property)" chart_prefix="property-detail" %}
 
   <div class="row g-3">
@@ -46,6 +57,9 @@
                 <span class="badge text-bg-success">Active</span>
               {% endif %}
             </dd>
+
+            <dt class="col-sm-4">Total asset value</dt>
+            <dd class="col-sm-8">{{ property.total_asset_value|zar }}</dd>
 
             <dt class="col-sm-4">Tags</dt>
             <dd class="col-sm-8"><code>{{ property.tags }}</code></dd>
@@ -93,9 +107,12 @@
       </div>
     </div>
   </div>
+  {% endif %}
 </div>
 {% endblock %}
 
 {% block js %}
+{% if detail_tab == "overview" %}
 {% include "dashboards/includes/pnl_charts_js.html" with chart_prefix="property-detail" %}
+{% endif %}
 {% endblock %}

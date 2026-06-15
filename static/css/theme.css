@@ -499,6 +499,12 @@
   min-height: 220px;
 }
 
+.crm-chart-wrap--asset-bars,
+.crm-chart-wrap--asset-lines{
+  height: min(280px, 38vh);
+  min-height: 240px;
+}
+
 .crm-chart-wrap canvas{
   display: block;
   width: 100% !important;
@@ -673,6 +679,22 @@
   margin-bottom: 0.5rem !important;
 }
 
+.crm-detail-tabs{
+  border-bottom-color: color-mix(in srgb, var(--bs-border-color) 70%, transparent);
+}
+
+.crm-detail-tabs .nav-link{
+  color: color-mix(in srgb, var(--bs-body-color) 65%, #666);
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.5rem 0.9rem;
+}
+
+.crm-detail-tabs .nav-link.active{
+  color: var(--bs-primary);
+  font-weight: 600;
+}
+
 .crm-chart-predict-toggle .form-check-input{
   cursor: pointer;
 }
@@ -687,6 +709,13 @@
   min-height: 220px;
   max-height: 220px;
   padding: 0;
+}
+
+.crm-dashboard .crm-chart-wrap--asset-bars,
+.crm-dashboard .crm-chart-wrap--asset-lines{
+  height: 240px;
+  min-height: 240px;
+  max-height: 240px;
 }
 
 .crm-dashboard-metric:hover,

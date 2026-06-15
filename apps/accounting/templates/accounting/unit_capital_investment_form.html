@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %}Capital investment{% endblock %}
+
+{% block content %}
+{% url "properties:unit_detail" unit.pk as unit_back_url %}
+{% with unit_label="Unit "|add:unit.unit_number %}
+{% include "components/crud_model_form.html" with title=form_title form=form back_url=unit_back_url|add:"?tab=capital" back_label=unit_label cancel_url=unit_back_url|add:"?tab=capital" submit_text="Save investment" %}
+{% endwith %}
+{% endblock %}

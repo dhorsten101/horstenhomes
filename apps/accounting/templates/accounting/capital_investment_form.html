@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block title %}Capital investment{% endblock %}
+
+{% block content %}
+{% include "components/crud_model_form.html" with title=form_title form=form back_url=back_url back_label=back_label cancel_url=back_url submit_text=submit_text|default:"Save investment" %}
+{% endblock %}

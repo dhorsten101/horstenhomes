@@ -17,7 +17,7 @@ from apps.leases.models import Lease
 from apps.leases.services import EXPIRING_LEASE_DAYS, crm_occupancy_stats
 from apps.portfolio.forms import PortfolioForm
 from apps.portfolio.models import Portfolio
-from apps.portfolio.services import total_asset_value
+from apps.portfolio.services import asset_acquisition_chart_data, total_asset_value
 from apps.properties.forms import PropertyForm, UnitForm
 from apps.properties.models import Property, Unit
 
@@ -51,6 +51,8 @@ def crm_dashboard_view(request):
 		**pnl_charts_context(request, units),
 		**scoped_top_performers_context(request, scope="global"),
 		"total_asset_value": total_asset_value(),
+		"units_count": units.count(),
+		"asset_acquisition_chart": asset_acquisition_chart_data(),
 		"empty_units_count": occupancy["empty_units"],
 		"leases_expiring_count": occupancy["leases_expiring"],
 		"month_to_month_leases_count": occupancy["month_to_month_leases"],

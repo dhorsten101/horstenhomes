@@ -1,0 +1,12 @@
+{% if asset_acquisition_chart %}
+  <div class="card crm-card crm-chart-card h-100 mb-0 w-100">
+    <div class="card-body crm-dashboard-chart-body">
+      <div class="crm-dashboard-chart-title">Asset acquisitions</div>
+      <p class="text-muted small mb-2">Invested capital (purchases + improvements) with {{ asset_acquisition_chart.growth_rate_pct|floatformat:1 }}% p.a. growth compounded yearly on total asset value.</p>
+      <div class="crm-chart-wrap crm-chart-wrap--asset-lines">
+        <canvas id="crm-dashboard-asset-chart" aria-label="Asset acquisition chart"></canvas>
+      </div>
+    </div>
+  </div>
+  {{ asset_acquisition_chart|json_script:"crm-dashboard-asset-chart-data" }}
+{% endif %}

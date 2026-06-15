@@ -121,12 +121,32 @@ def pnl_charts_context(request, unit_qs: QuerySet[Unit]) -> dict:
 	current_year = pnl_default_year()
 	if current_year not in available_years:
 		available_years = sorted(set(available_years) | {current_year}, reverse=True)
+	cumulative_profit_chart = None
+	yearly_cumulative = accounting_cumulative_yearly_series_for_units(unit_qs)
+	if yearly_cumulative:
+		from apps.portfolio.services import capital_growth_for_chart_labels, total_asset_value
+
+		capital_gains = capital_growth_for_chart_labels(
+			yearly_cumulative["labels"],
+			granularity="yearly",
+		)
+		cumulative_profit_chart = {
+			"labels": yearly_cumulative["labels"],
+			"profit": yearly_cumulative["profit"],
+			"capital_gains": capital_gains,
+			"combined": [
+				float(profit) + float(growth)
+				for profit, growth in zip(yearly_cumulative["profit"], capital_gains, strict=True)
+			],
+			"total_asset_value": float(total_asset_value()),
+		}
 	return {
 		"invoices_total": t["invoices_total"],
 		"expenses_total": t["expenses_total"],
 		"net": t["net"],
 		"monthly_pnl_chart": period_chart,
 		"cumulative_pnl_chart": cumulative_chart,
+		"cumulative_profit_chart": cumulative_profit_chart,
 		"pnl_chart_granularity": granularity,
 		"selected_year": selected_year,
 		"available_years": available_years,
@@ -485,3 +505,20 @@ def units_with_pnl_for_property(property: Property) -> QuerySet[Unit]:
 
 def properties_with_pnl_for_portfolio(portfolio: Portfolio) -> QuerySet[Property]:
 	return annotate_property_pnl(Property.objects.filter(portfolio=portfolio)).order_by("name")
+
+
+def invoices_for_property(property: Property):
+	return (
+		UnitInvoice.objects.filter(unit__property=property)
+		.select_related("unit")
+		.order_by("-issue_date", "-created_at")[:200]
+	)
+
+
+def expenses_for_property(property: Property):
+	return (
+		UnitExpense.objects.filter(unit__property=property)
+		.select_related("unit")
+		.prefetch_related("documents")
+		.order_by("-expense_date", "-created_at")[:200]
+	)

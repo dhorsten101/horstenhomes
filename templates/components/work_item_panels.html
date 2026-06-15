@@ -1,6 +1,7 @@
 {# Expects: document_upload_form, work_documents #}
+{# Optional: in_tab (bool), show_all (bool) #}
 
-<div class="crm-documents-panel mt-2">
+<div class="crm-documents-panel{% if not in_tab %} mt-2{% endif %}">
   <div class="card crm-card">
     <div class="card-body py-2 px-3">
       <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
@@ -39,7 +40,7 @@
 
       <div class="crm-documents-list small">
         {% for d in work_documents %}
-          {% if forloop.counter <= 3 %}
+          {% if show_all or forloop.counter <= 3 %}
             <div class="crm-documents-list-item d-flex align-items-center justify-content-between gap-2 py-1 border-top">
               <div class="min-w-0 text-truncate">
                 <a class="text-decoration-none" href="{% url 'documents:detail' d.pk %}">
@@ -54,7 +55,7 @@
           <div class="text-muted py-1">No documents yet.</div>
         {% endfor %}
 
-        {% if work_documents|length > 3 %}
+        {% if not show_all and work_documents|length > 3 %}
           <div class="collapse work-document-extra">
             {% for d in work_documents %}
               {% if forloop.counter > 3 %}
@@ -73,7 +74,9 @@
         {% endif %}
       </div>
 
-      {% include "components/crm_preview_rows_toggle.html" with items=work_documents preview_extra_class="work-document-extra" %}
+      {% if not show_all %}
+        {% include "components/crm_preview_rows_toggle.html" with items=work_documents preview_extra_class="work-document-extra" %}
+      {% endif %}
     </div>
   </div>
 </div>

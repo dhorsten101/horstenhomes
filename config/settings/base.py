@@ -292,3 +292,6 @@ LOGGING = {
 SLOW_REQUEST_MS = int(os.environ.get("SLOW_REQUEST_MS", "1000"))
 SLOW_DB_QUERY_MS = int(os.environ.get("SLOW_DB_QUERY_MS", "200"))
 
+# Annual capital growth rate for asset acquisition chart (decimal, e.g. 0.03 = 3%).
+ASSET_CAPITAL_GROWTH_RATE = float(os.environ.get("ASSET_CAPITAL_GROWTH_RATE", "0.03"))
+

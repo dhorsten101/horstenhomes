@@ -15,6 +15,17 @@
   {% url 'properties:unit_delete' unit.pk as delete_url %}
   {% include "components/crm_detail_header.html" with title_prefix="Unit" title=unit.unit_number updated=unit.updated_at edit_url=edit_url delete_url=delete_url delete_confirm="Delete this unit?" pnl_url=pnl_url %}
 
+  {% include "components/crm_detail_tabs.html" %}
+
+  {% if detail_tab == "capital" %}
+    {% include "accounting/includes/capital_investments_tab.html" with create_url=capital_investment_create_url %}
+  {% elif detail_tab == "documents" %}
+    {% include "components/work_item_panels.html" with in_tab=True show_all=True %}
+  {% elif detail_tab == "invoices" %}
+    {% include "accounting/includes/unit_invoices_panel.html" with invoices=unit_invoices in_tab=True show_all=True create_url=invoice_create_url %}
+  {% elif detail_tab == "expenses" %}
+    {% include "accounting/includes/unit_expenses_panel.html" with expenses=unit_expenses in_tab=True show_all=True create_url=expense_create_url %}
+  {% else %}
   <div class="card crm-card">
     <div class="card-body py-3">
       <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-2 crm-unit-detail-grid">
@@ -66,6 +77,12 @@
           <div class="crm-unit-detail-item">
             <div class="crm-unit-detail-label">Purchase price</div>
             <div class="crm-unit-detail-value">{{ unit.purchase_price|zar }}</div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="crm-unit-detail-item">
+            <div class="crm-unit-detail-label">Total asset value</div>
+            <div class="crm-unit-detail-value">{{ unit_total_asset_value|zar }}</div>
           </div>
         </div>
         <div class="col">
@@ -133,129 +150,21 @@
       {% include "dashboards/includes/pnl_charts_section.html" with chart_prefix="unit-detail" show_summary=True %}
       <div class="row g-3">
         <div class="col-md-6">
-          <h2 class="h6 mb-2">
-            Invoices
-            {% if unit_invoices %}<span class="text-muted fw-normal small">({{ unit_invoices|length }})</span>{% endif %}
-          </h2>
-          {% if unit_invoices %}
-            <div class="table-responsive">
-              <table class="table table-sm table-striped mb-0">
-                <thead><tr><th>Date</th><th class="text-end">Amount</th><th>Description</th></tr></thead>
-                <tbody>
-                  {% for row in unit_invoices %}
-                    {% if forloop.counter <= 3 %}
-                      <tr>
-                        <td>{{ row.issue_date|date:"Y-m-d" }}</td>
-                        <td class="text-end">{{ row.amount|zar }}</td>
-                        <td>{{ row.description|default:"—" }}</td>
-                      </tr>
-                    {% endif %}
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-            {% if unit_invoices|length > 3 %}
-              <div class="collapse unit-invoice-extra">
-                <div class="table-responsive">
-                  <table class="table table-sm table-striped mb-0">
-                    <tbody>
-                      {% for row in unit_invoices %}
-                        {% if forloop.counter > 3 %}
-                          <tr>
-                            <td>{{ row.issue_date|date:"Y-m-d" }}</td>
-                            <td class="text-end">{{ row.amount|zar }}</td>
-                            <td>{{ row.description|default:"—" }}</td>
-                          </tr>
-                        {% endif %}
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            {% endif %}
-            {% include "components/crm_preview_rows_toggle.html" with items=unit_invoices preview_extra_class="unit-invoice-extra" %}
-          {% else %}
-            <p class="text-muted small mb-0">No invoices yet.</p>
-          {% endif %}
+          {% include "accounting/includes/unit_invoices_panel.html" with invoices=unit_invoices preview_extra_class="unit-invoice-extra" %}
         </div>
         <div class="col-md-6">
-          <h2 class="h6 mb-2">
-            Expenses
-            {% if unit_expenses %}<span class="text-muted fw-normal small">({{ unit_expenses|length }})</span>{% endif %}
-          </h2>
-          {% if unit_expenses %}
-            <div class="table-responsive">
-              <table class="table table-sm table-striped mb-0">
-                <thead><tr><th>Date</th><th class="text-end">Amount</th><th>Description</th><th>Attachment</th></tr></thead>
-                <tbody>
-                  {% for row in unit_expenses %}
-                    {% if forloop.counter <= 3 %}
-                      <tr>
-                        <td>{{ row.expense_date|date:"Y-m-d" }}</td>
-                        <td class="text-end">{{ row.amount|zar }}</td>
-                        <td>{{ row.description|default:"—" }}</td>
-                        <td class="text-nowrap small">
-                          {% for d in row.documents.all %}
-                            {% if forloop.first %}
-                              <a href="{% url 'documents:download' d.pk %}">Download</a>
-                            {% endif %}
-                          {% empty %}
-                            —
-                          {% endfor %}
-                          {% if row.documents.count > 1 %}
-                            <span class="text-muted">(+{{ row.documents.count|add:"-1" }})</span>
-                          {% endif %}
-                        </td>
-                      </tr>
-                    {% endif %}
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-            {% if unit_expenses|length > 3 %}
-              <div class="collapse unit-expense-extra">
-                <div class="table-responsive">
-                  <table class="table table-sm table-striped mb-0">
-                    <tbody>
-                      {% for row in unit_expenses %}
-                        {% if forloop.counter > 3 %}
-                          <tr>
-                            <td>{{ row.expense_date|date:"Y-m-d" }}</td>
-                            <td class="text-end">{{ row.amount|zar }}</td>
-                            <td>{{ row.description|default:"—" }}</td>
-                            <td class="text-nowrap small">
-                              {% for d in row.documents.all %}
-                                {% if forloop.first %}
-                                  <a href="{% url 'documents:download' d.pk %}">Download</a>
-                                {% endif %}
-                              {% empty %}
-                                —
-                              {% endfor %}
-                              {% if row.documents.count > 1 %}
-                                <span class="text-muted">(+{{ row.documents.count|add:"-1" }})</span>
-                              {% endif %}
-                            </td>
-                          </tr>
-                        {% endif %}
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            {% endif %}
-            {% include "components/crm_preview_rows_toggle.html" with items=unit_expenses preview_extra_class="unit-expense-extra" %}
-          {% else %}
-            <p class="text-muted small mb-0">No expenses yet.</p>
-          {% endif %}
+          {% include "accounting/includes/unit_expenses_panel.html" with expenses=unit_expenses preview_extra_class="unit-expense-extra" %}
         </div>
       </div>
     </div>
   </div>
 
-  {% include "components/work_item_panels.html" %}
+  {% endif %}
 </div>
 {% endblock %}
 
 {% block js %}
+{% if detail_tab == "overview" %}
 {% include "dashboards/includes/pnl_charts_js.html" with chart_prefix="unit-detail" %}
+{% endif %}
 {% endblock %}

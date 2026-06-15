@@ -1,0 +1,52 @@
+{% load money_extras %}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+  <div>
+    <h2 class="h5 mb-0">Capital investments</h2>
+    <p class="text-muted small mb-0">Improvements and capital added to this asset.</p>
+  </div>
+  <a class="btn btn-primary btn-sm" href="{{ create_url }}">
+    <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Add investment
+  </a>
+</div>
+
+<div class="card crm-card crm-table-card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th class="text-end">Amount</th>
+          <th>Description</th>
+          {% if show_asset %}<th>Asset</th>{% endif %}
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in capital_investments %}
+          <tr>
+            <td>{{ row.investment_date|date:"Y-m-d" }}</td>
+            <td class="text-end">{{ row.amount|zar }}</td>
+            <td>{{ row.description|default:"—" }}</td>
+            {% if show_asset %}
+              <td class="small text-muted">{{ row.asset_label }}</td>
+            {% endif %}
+            <td class="text-end crm-row-actions">
+              <a class="btn btn-sm btn-outline-secondary" href="{% url 'accounting:capital_investment_update' row.pk %}">Edit</a>
+              <form method="post" action="{% url 'accounting:capital_investment_delete' row.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Delete this capital investment?">Delete</button>
+              </form>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="{% if show_asset %}5{% else %}4{% endif %}" class="text-center text-muted py-4">
+              No capital investments yet.
+              <a href="{{ create_url }}">Add one</a>.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>

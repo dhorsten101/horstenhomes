@@ -1,0 +1,37 @@
+<ul class="nav nav-tabs crm-detail-tabs mb-3" role="tablist">
+  <li class="nav-item" role="presentation">
+    <a
+      class="nav-link{% if detail_tab == 'overview' %} active{% endif %}"
+      href="{{ overview_url }}"
+      {% if detail_tab == 'overview' %}aria-current="page"{% endif %}
+    >Overview</a>
+  </li>
+  <li class="nav-item" role="presentation">
+    <a
+      class="nav-link{% if detail_tab == 'invoices' %} active{% endif %}"
+      href="{{ invoices_url }}"
+      {% if detail_tab == 'invoices' %}aria-current="page"{% endif %}
+    >Invoices</a>
+  </li>
+  <li class="nav-item" role="presentation">
+    <a
+      class="nav-link{% if detail_tab == 'expenses' %} active{% endif %}"
+      href="{{ expenses_url }}"
+      {% if detail_tab == 'expenses' %}aria-current="page"{% endif %}
+    >Expenses</a>
+  </li>
+  <li class="nav-item" role="presentation">
+    <a
+      class="nav-link{% if detail_tab == 'capital' %} active{% endif %}"
+      href="{{ capital_url }}"
+      {% if detail_tab == 'capital' %}aria-current="page"{% endif %}
+    >Capital investments</a>
+  </li>
+  <li class="nav-item" role="presentation">
+    <a
+      class="nav-link{% if detail_tab == 'documents' %} active{% endif %}"
+      href="{{ documents_url }}"
+      {% if detail_tab == 'documents' %}aria-current="page"{% endif %}
+    >Documents</a>
+  </li>
+</ul>
